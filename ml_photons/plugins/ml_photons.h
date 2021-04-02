@@ -211,7 +211,7 @@ class cluster
     for(unsigned int ii=0; ii<xcoords.size(); ii++){
       int x = xcoords[ii];
       int y = ycoords[ii];
-      int e = Es[ii];
+      float e = Es[ii];
       if(x >= isize){x=isize-1;}
       if(y >= isize){y=isize-1;}
       if(x < 0){x=0;}

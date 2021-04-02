@@ -200,11 +200,17 @@ ml_photons::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   std::ofstream output_class ;
   output_class.open("classifier_scores.csv", std::ios_base::app);
+  std::ofstream output_test ;
+  output_test.open("test_clusters.csv", std::ios_base::app);
 
   for (auto C : Clusters)
   {
     C.makeImage();
     std::vector<std::vector<float>> img = C.image;
+    //for(unsigned int i=0; i<img.at(0).size(); i++){
+    //  std::cout << img.at(0).at(i) << " ";
+    //}
+    //std::cout << std::endl;
 
     //Perform the Classification
     outputs = ort_class.run(input_names, img, output_names, 1)[0];
@@ -216,6 +222,9 @@ ml_photons::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     }
 
     output_class << evt_id << ", ";
+    output_test << evt_id << ", ";
+    C.PRINT_Eta_Phi(output_test);
+    output_test << std::endl;
 
     for(unsigned int ii=0; ii< outputs.size(); ii++){
       output_class << exp(outputs.at(ii)) / denom << ", ";
