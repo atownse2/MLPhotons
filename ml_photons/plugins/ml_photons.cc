@@ -23,21 +23,13 @@ using namespace edm;
 using namespace fastjet;
 using namespace fastjet::contrib;
 
-//
-// class declaration
-//
-
-//class ml_photons : public edm::stream::EDProducer<edm::GlobalCache<ONNXRuntime>> {
 class ml_photons : public edm::stream::EDProducer<> {
    public:
       explicit ml_photons( const edm::ParameterSet& );
-      //explicit ml_photons(const edm::ParameterSet&, const ONNXRuntime *);
       ~ml_photons() override;
 
       static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
-      //static std::unique_ptr<ONNXRuntime> initializeGlobalCache(const edm::ParameterSet &);
-      //static void globalEndJob(const ONNXRuntime *);
 
    private:
       virtual void beginStream(edm::StreamID) override;
@@ -52,19 +44,18 @@ class ml_photons : public edm::stream::EDProducer<> {
       EDGetTokenT<std::vector<reco::Vertex>> token_vtx;
       EDGetTokenT<edm::TriggerResults> triggerResultsToken;
       ONNXRuntime ort_class;
-      //ONNXRuntime ort_regress;
+      ONNXRuntime ort_regress;
   };
 
 ml_photons::ml_photons(const edm::ParameterSet& iConfig):
-//ml_photons::ml_photons(const edm::ParameterSet& iConfig, const ONNXRuntime *cache):
   MATCH_DR(iConfig.getParameter<double>("MATCH_DeltaR") ),
   token_clusters(consumes<std::vector<reco::CaloCluster>>(iConfig.getParameter<edm::InputTag>("CluInputTag"))),
   token_HEE(consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >>(iConfig.getParameter<edm::InputTag>("HEEInputTag"))),
   token_HEB(consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >>(iConfig.getParameter<edm::InputTag>("HEBInputTag"))),
   token_vtx(consumes<std::vector<reco::Vertex>>(iConfig.getParameter<edm::InputTag>("VtxInputTag"))),
   triggerResultsToken(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("TriggerInputTag_HLT"))),
-  ort_class(iConfig.getParameter<edm::FileInPath>("classifier_path").fullPath())
-  //ort_regress(iConfig.getParameter<edm::FileInPath>("regressor_path").fullPath())
+  ort_class(iConfig.getParameter<edm::FileInPath>("classifier_path").fullPath()),
+  ort_regress(iConfig.getParameter<edm::FileInPath>("regressor_path").fullPath())
 {
 }
 
@@ -81,31 +72,19 @@ ml_photons::~ml_photons()
 //
 // member functions
 //
-//std::unique_ptr<ONNXRuntime> ml_photons::initializeGlobalCache(const edm::ParameterSet &iConfig) {
-    //return std::make_unique<ONNXRuntime>(iConfig.getParameter<edm::FileInPath>("classifier_path").fullPath());
-//}
 
-//
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
-
 void
 ml_photons::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   //The following says we do not know what parameters are allowed so do no validation
   // Please change this to state exactly what you do use, even if it is no parameters
   edm::ParameterSetDescription desc;
-  //desc.add<edm::FileInPath>("classifier_path",
-  //                            edm::FileInPath("ML_Photons/ml_photons/plugins/classifier.onnx"));
- 
-  //desc.add<edm::FileInPath>("regressor_path",
-  //                            edm::FileInPath("ML_Photons/ml_photons/plugins/regressor.onnx"));
 
   desc.setUnknown();
   //descriptions.addDefault(desc);
   descriptions.addWithDefaultLabel(desc);
 }
 
-//void ml_photons::globalEndJob() {}
-//void ml_photons::globalEndJob(const ONNXRuntime *cache) {}
 
 // ------------ method called to produce the data  ------------
 void
@@ -189,47 +168,74 @@ ml_photons::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 /////////////////////////////////////////////////////////////////////////////
 
   static const int isize = 30;
-  std::vector<std::string> input_names;
+  std::vector<std::string> class_input_names;
   for(int i=0; i<isize*isize; i++){
-    input_names.push_back("input");
+    class_input_names.push_back("img");
   }
-  std::vector<std::string> output_names ; //Can be blank
 
-  std::vector<std::vector<float>> input(isize*isize, std::vector<float>(isize*isize,0.0)); //For some reason, this has to be of size 900x900 :/
-  std::vector<float> outputs(3, 0); // init to zeros
+  std::vector<std::string> regress_input_names;
+  regress_input_names.emplace_back("img");
+  regress_input_names.emplace_back("eta");
 
-  std::ofstream output_class ;
-  output_class.open("classifier_scores.csv", std::ios_base::app);
-  std::ofstream output_test ;
+  std::vector<std::string> class_output_names ; //Initialize vectors to hold ML output. Can be blank
+  std::vector<std::string> regress_output_names ; 
+
+  std::vector<std::vector<float>> input(isize*isize, std::vector<float>(isize*isize,0.0)); //Possible fix: Classifier takes 900x900 vector. not sure why... :/
+  std::vector<float> class_outputs(3, 0); // init to zeros
+  std::vector<float> regress_outputs(1, 0); // init to zeros
+
+  std::ofstream output_ml ; //output file for ml outputs. Temporary, used for comparisons
+  output_ml.open("ml_scores.csv", std::ios_base::app);
+  std::ofstream output_test ; //output file to send to pytorch jupyter notebooks to compare
   output_test.open("test_clusters.csv", std::ios_base::app);
+
 
   for (auto C : Clusters)
   {
+    //make Image from clusters
     C.makeImage();
+
+    //Create inputs for classifier and regressor
     std::vector<std::vector<float>> img = C.image;
-    //for(unsigned int i=0; i<img.at(0).size(); i++){
-    //  std::cout << img.at(0).at(i) << " ";
-    //}
-    //std::cout << std::endl;
+    std::vector<float> r_img = img.at(0);
+    float eta = C.vec.Eta();
+    std::vector<float> eta_v = {eta};
+
+    //Normalize regressor image
+    float img_sum = std::accumulate(r_img.begin(), r_img.end(), 0.0);
+    std::cout << std::setprecision(8) << img_sum << std::endl;
+
+    //Set up multiple inputs for regressor
+    FloatArrays regress_data_;
+    regress_data_.emplace_back(r_img);
+    regress_data_.emplace_back(eta_v);
 
     //Perform the Classification
-    outputs = ort_class.run(input_names, img, output_names, 1)[0];
+    class_outputs = ort_class.run(class_input_names, img, class_output_names, 1)[0];
+
+    //Perform the Regression
+    regress_outputs = ort_regress.run(regress_input_names, regress_data_, regress_output_names, 1)[0];
 
     //Compute softmax of Classifier output
     float denom = 0.0;
-    for(unsigned int ii=0; ii< outputs.size(); ii++){
-      denom += exp(outputs.at(ii));
+    for(unsigned int ii=0; ii< class_outputs.size(); ii++){
+      denom += exp(class_outputs.at(ii));
     }
 
-    output_class << evt_id << ", ";
+    output_ml << evt_id << ", ";
     output_test << evt_id << ", ";
     C.PRINT_Eta_Phi(output_test);
     output_test << std::endl;
 
-    for(unsigned int ii=0; ii< outputs.size(); ii++){
-      output_class << exp(outputs.at(ii)) / denom << ", ";
+    for(unsigned int ii=0; ii< class_outputs.size(); ii++){
+      //output classifier scores (mono, di, had)
+      output_ml << exp(class_outputs.at(ii)) / denom << ", ";
     }
-    output_class << std::endl;
+    for(unsigned int ii=0; ii< regress_outputs.size(); ii++){
+      //output regressed mass
+      output_ml << regress_outputs.at(ii);
+    }
+    output_ml << std::endl;
   }
 
 }
