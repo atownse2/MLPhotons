@@ -203,6 +203,9 @@ ml_photons::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
     //Normalize regressor image
     float img_sum = std::accumulate(r_img.begin(), r_img.end(), 0.0);
+    for (unsigned int i=0; i<r_img.size(); i++){
+      r_img.at(i) = r_img.at(i) / img_sum;
+    }
 
     //Set up multiple inputs for regressor
     FloatArrays regress_data_;
