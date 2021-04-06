@@ -18,6 +18,9 @@
 
 #include "ml_photons.h"
 //
+
+#include "FWCore/Utilities/interface/InputTag.h"
+
 using namespace cms::Ort;
 using namespace edm;
 using namespace fastjet;
@@ -45,6 +48,9 @@ class ml_photons : public edm::stream::EDProducer<> {
       EDGetTokenT<edm::TriggerResults> triggerResultsToken;
       ONNXRuntime ort_class;
       ONNXRuntime ort_regress;
+      //std::string jetName_;
+      //std::string tname_;
+
   };
 
 ml_photons::ml_photons(const edm::ParameterSet& iConfig):
@@ -54,9 +60,16 @@ ml_photons::ml_photons(const edm::ParameterSet& iConfig):
   token_HEB(consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >>(iConfig.getParameter<edm::InputTag>("HEBInputTag"))),
   token_vtx(consumes<std::vector<reco::Vertex>>(iConfig.getParameter<edm::InputTag>("VtxInputTag"))),
   triggerResultsToken(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("TriggerInputTag_HLT"))),
+  //ort_class(iConfig.getParameter<edm::FileInPath>("./ML_Photons/ml_photons/plugins/classifier.onnx").fullPath()),
   ort_class(iConfig.getParameter<edm::FileInPath>("classifier_path").fullPath()),
   ort_regress(iConfig.getParameter<edm::FileInPath>("regressor_path").fullPath())
+  //jetName_     (iConfig.getParameter<std::string>("jetName"))
+  //tname_(iConfig.getParameter<std::string>("test_name"))
 {
+
+  //produces<std::vector<double> > (jetName_ + "PartonFlavour");
+  //produces<std::vector<unsigned int>> (tname_);
+
 }
 
 
@@ -107,15 +120,27 @@ ml_photons::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.getByToken(token_vtx, vtx);
 
 
+
 // TODO: Add triggering here
 
 //
 // TODO: Add vertexing here
 
+/////////////////////////////////////////////////////////
 //
-  //////////////////////////////////////////////////////
+  //std::unique_ptr<std::vector<int>> test_int( new std::vector<int> );
+  //std::auto_ptr<std::vector<unsigned int>> test_int_( new std::vector<unsigned int> );
+  //test_int_->push_back(1);
+  //iEvent.put(test_int_, tname_);
+  //std::auto_ptr<std::vector<double>> PartFlav( new std::vector<double> );
+  //PartFlav->push_back(1.0);
+  //iEvent.put(*PartFlav , jetName_ + "PartonFlavour");
+//
+/////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////
   //BEGIN WITH CLUSTERING
-  //////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
   edm::ESHandle<CaloGeometry> pG; 
   iSetup.get<CaloGeometryRecord>().get(pG);
   const CaloGeometry cG = *pG;

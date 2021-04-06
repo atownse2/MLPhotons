@@ -1,6 +1,10 @@
 import sys
 import FWCore.ParameterSet.Config as cms
 from Configuration.Eras.Era_Run2_2018_cff import Run2_2018
+import os
+
+pwd = os.getcwd()
+pwd = pwd[:pwd.rfind("/")]
 
 process = cms.Process("mlphotons")
 
@@ -14,12 +18,12 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( -1) )
 process.source = cms.Source("PoolSource", 
                             fileNames =
                             #cms.untracked.vstring('file:'+sys.argv[2]))
-                            cms.untracked.vstring('file:/home/sclark/ml_photons/CMSSW_10_6_14/src/ML_Photons/ml_photons/python/test/aGun_flatMoE_barrel_MINIAODSIM_1.root'))
+                            cms.untracked.vstring('file:' + pwd + '/python/test/test_gunfile.root'))
 
 process.mlphotons = cms.EDProducer(
 				'ml_photons',
-        classifier_path = cms.FileInPath("ML_Photons/ml_photons/plugins/classifier.onnx"),
-        regressor_path = cms.FileInPath("ML_Photons/ml_photons/plugins/regressor.onnx"),
+        classifier_path = cms.FileInPath("./ML_Photons/ml_photons/plugins/classifier.onnx"),
+        regressor_path = cms.FileInPath("./ML_Photons/ml_photons/plugins/regressor.onnx"),
 				PhoInputTag = cms.InputTag('slimmedPhotons', '', sys.argv[3]),
 				CluInputTag = cms.InputTag('reducedEgamma', 'reducedEBEEClusters', sys.argv[3]),
 				HEEInputTag = cms.InputTag('reducedEgamma', 'reducedEERecHits', sys.argv[3]),
