@@ -46,6 +46,8 @@ process.out = cms.OutputModule("PoolOutputModule",
      "drop *_scalersRawToDigi_*_*",
      "drop *_l1extraParticles_*_*",
      "drop *_bunchSpacingProducer_*_*",
+     "drop *_BeamHaloSummary_*_*",
+     "drop *_CSCHaloData_*_*",
      )
     )
 
