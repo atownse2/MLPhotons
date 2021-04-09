@@ -40,7 +40,7 @@ class ml_photons : public edm::stream::EDProducer<> {
       virtual void endStream() override;
 
       // ----------member data ---------------------------
-      const double MATCH_DR;
+      const double MATCH_DR = 0.15; //Cluster Size
       EDGetTokenT<std::vector<reco::CaloCluster>> token_clusters;
       EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >> token_HEE;
       EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >> token_HEB;
@@ -51,7 +51,6 @@ class ml_photons : public edm::stream::EDProducer<> {
   };
 
 ml_photons::ml_photons(const edm::ParameterSet& iConfig):
-  MATCH_DR(iConfig.getParameter<double>("MATCH_DeltaR") ),
   token_clusters(consumes<std::vector<reco::CaloCluster>>(iConfig.getParameter<edm::InputTag>("CluInputTag"))),
   token_HEE(consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >>(iConfig.getParameter<edm::InputTag>("HEEInputTag"))),
   token_HEB(consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >>(iConfig.getParameter<edm::InputTag>("HEBInputTag"))),

@@ -31,7 +31,6 @@ process.mlphotons = cms.EDProducer(
 				RHInputTag = cms.InputTag('reducedEgamma', 'reducedEBRecHits', sys.argv[3]),
         TriggerInputTag_HLT = cms.InputTag('TriggerResults', '', "HLT"),
         VtxInputTag = cms.InputTag('offlineSlimmedPrimaryVertices', '', sys.argv[3]),
-        MATCH_DeltaR = cms.double(float(sys.argv[4])),
         cluster_name = cms.string("RUCLUs"),
 			)
 
