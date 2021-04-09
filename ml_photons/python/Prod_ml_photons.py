@@ -37,7 +37,17 @@ process.mlphotons = cms.EDProducer(
 
 process.out = cms.OutputModule("PoolOutputModule",
     fileName = cms.untracked.string('myOutputFile.root')
-    ,outputCommands = cms.untracked.vstring('keep *')
+    ,outputCommands = cms.untracked.vstring('keep *',
+     "drop *_gtStage2Digis_*_*",
+     "drop *_caloStage2Digis_*_*",
+     "drop *_gmtStage2Digis_*_*",
+     "drop *_hcalnoise_*_*",
+     "drop *_gtDigis_*_*",
+     "drop *_fixedGridRho*_*_*",
+     "drop *_scalersRawToDigi_*_*",
+     "drop *_l1extraParticles_*_*",
+     "drop *_bunchSpacingProducer_*_*",
+     )
     )
 
 process.p = cms.Path(process.mlphotons)
