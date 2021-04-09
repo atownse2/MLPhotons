@@ -48,7 +48,7 @@ class ml_photons : public edm::stream::EDProducer<> {
       EDGetTokenT<edm::TriggerResults> triggerResultsToken;
       ONNXRuntime ort_class;
       ONNXRuntime ort_regress;
-      std::string tname_;
+      std::string cname_;
 
   };
 
@@ -61,11 +61,16 @@ ml_photons::ml_photons(const edm::ParameterSet& iConfig):
   triggerResultsToken(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("TriggerInputTag_HLT"))),
   ort_class(iConfig.getParameter<edm::FileInPath>("classifier_path").fullPath()),
   ort_regress(iConfig.getParameter<edm::FileInPath>("regressor_path").fullPath()),
-  tname_(iConfig.getParameter<std::string>("test_name"))
+  cname_(iConfig.getParameter<std::string>("cluster_name"))
 {
 
-  //produces<std::vector<int> > (jetName_ + "PartonFlavour");
-  produces<std::vector<int>> (tname_);
+  produces<std::vector<float>> (cname_+"Eta");
+  produces<std::vector<float>> (cname_+"Phi");
+  produces<std::vector<float>> (cname_+"E");
+  produces<std::vector<float>> (cname_+"MoE");
+  produces<std::vector<float>> (cname_+"Monopho");
+  produces<std::vector<float>> (cname_+"Dipho");
+  produces<std::vector<float>> (cname_+"Hadron");
 
 }
 
@@ -123,14 +128,6 @@ ml_photons::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 //
 // TODO: Add vertexing here
 
-/////////////////////////////////////////////////////////
-//
-  std::unique_ptr<std::vector<int>> test_int_( new std::vector<int> );
-  test_int_->emplace_back(12);
-  iEvent.put(std::move(test_int_), tname_);
-
-//
-/////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////
   //BEGIN WITH CLUSTERING
@@ -243,6 +240,28 @@ ml_photons::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       denom += exp(class_outputs.at(ii));
     }
 
+    //Outputs
+    //TODO: Remove csv stuff
+    std::unique_ptr<std::vector<float>> cluster_Eta_( new std::vector<float> );
+    std::unique_ptr<std::vector<float>> cluster_Phi_( new std::vector<float> );
+    std::unique_ptr<std::vector<float>> cluster_E_( new std::vector<float> );
+    std::unique_ptr<std::vector<float>> cluster_MoE_( new std::vector<float> );
+    std::unique_ptr<std::vector<float>> cluster_mono_( new std::vector<float> );
+    std::unique_ptr<std::vector<float>> cluster_di_( new std::vector<float> );
+    std::unique_ptr<std::vector<float>> cluster_had_( new std::vector<float> );
+
+    cluster_Eta_->emplace_back( C.vec.Eta() );
+    cluster_Phi_->emplace_back( C.vec.Phi() );
+    cluster_E_->emplace_back( C.getTotalE() );
+
+    //float regressed_mass = regress_outputs.at(0) * C.getTotalE(); // Compute mass from regressed m/E
+    //cluster_info_->emplace_back( regressed_mass );
+    cluster_MoE_->emplace_back( regress_outputs.at(0));
+
+    cluster_mono_->emplace_back(exp(class_outputs.at(0)) / denom);
+    cluster_di_->emplace_back(exp(class_outputs.at(1)) / denom);
+    cluster_had_->emplace_back(exp(class_outputs.at(2)) / denom);
+
     output_ml << evt_id << ", ";
     output_test << evt_id << ", ";
     C.PRINT_Eta_Phi(output_test);
@@ -252,13 +271,21 @@ ml_photons::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       //output classifier scores (mono, di, had)
       output_ml << exp(class_outputs.at(ii)) / denom << ", ";
     }
+
     for(unsigned int ii=0; ii< regress_outputs.size(); ii++){
       //output regressed mass
       output_ml << regress_outputs.at(ii);
     }
     output_ml << std::endl;
-  }
 
+    iEvent.put(std::move(cluster_Eta_), cname_+"Eta");
+    iEvent.put(std::move(cluster_Phi_), cname_+"Phi");
+    iEvent.put(std::move(cluster_E_), cname_+"E");
+    iEvent.put(std::move(cluster_MoE_), cname_+"MoE");
+    iEvent.put(std::move(cluster_mono_), cname_+"Monopho");
+    iEvent.put(std::move(cluster_di_), cname_+"Dipho");
+    iEvent.put(std::move(cluster_had_), cname_+"Hadron");
+  }
 }
 
 // ------------ method called once each stream before processing any runs, lumis or events  ------------

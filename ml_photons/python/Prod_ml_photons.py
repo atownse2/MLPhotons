@@ -32,7 +32,7 @@ process.mlphotons = cms.EDProducer(
         TriggerInputTag_HLT = cms.InputTag('TriggerResults', '', "HLT"),
         VtxInputTag = cms.InputTag('offlineSlimmedPrimaryVertices', '', sys.argv[3]),
         MATCH_DeltaR = cms.double(float(sys.argv[4])),
-        test_name = cms.string("PleaseWork"),
+        cluster_name = cms.string("RUCLUs"),
 			)
 
 process.out = cms.OutputModule("PoolOutputModule",
