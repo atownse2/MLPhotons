@@ -32,5 +32,14 @@ process.mlphotons = cms.EDProducer(
         TriggerInputTag_HLT = cms.InputTag('TriggerResults', '', "HLT"),
         VtxInputTag = cms.InputTag('offlineSlimmedPrimaryVertices', '', sys.argv[3]),
         MATCH_DeltaR = cms.double(float(sys.argv[4])),
+        test_name = cms.string("PleaseWork"),
 			)
+
+process.out = cms.OutputModule("PoolOutputModule",
+    fileName = cms.untracked.string('myOutputFile.root')
+    ,outputCommands = cms.untracked.vstring('keep *')
+    )
+
 process.p = cms.Path(process.mlphotons)
+
+process.e = cms.EndPath(process.out)
