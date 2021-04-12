@@ -17,8 +17,9 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( -1) )
 
 process.source = cms.Source("PoolSource", 
                             fileNames =
-                            #cms.untracked.vstring('file:'+sys.argv[2]))
-                            cms.untracked.vstring('file:' + pwd + '/python/test/test_gunfile.root'))
+                            #cms.untracked.vstring('file:'+sys.argv[2])) //Local File
+                            cms.untracked.vstring("root://cmsxrootd.fnal.gov//"+sys.argv[2])) #Official MC (or other nonlocal file)
+                            #cms.untracked.vstring('file:' + pwd + '/python/test/test_gunfile.root')) #Test file
 
 process.mlphotons = cms.EDProducer(
 				'ml_photons',
@@ -34,8 +35,11 @@ process.mlphotons = cms.EDProducer(
         cluster_name = cms.string("RUCLUs"),
 			)
 
+infname = sys.argv[2][(sys.argv[2].rfind("/") + 1 ) :]
+outfname = sys.argv[4] + 'RUCLU_tree_' + infname
+
 process.out = cms.OutputModule("PoolOutputModule",
-    fileName = cms.untracked.string('myOutputFile.root')
+    fileName = cms.untracked.string(outfname)
     ,outputCommands = cms.untracked.vstring('keep *',
      "drop *_gtStage2Digis_*_*",
      "drop *_caloStage2Digis_*_*",
