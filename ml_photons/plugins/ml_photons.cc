@@ -54,8 +54,8 @@ ml_photons::ml_photons(const edm::ParameterSet& iConfig):
   token_clusters(consumes<std::vector<reco::CaloCluster>>(iConfig.getParameter<edm::InputTag>("CluInputTag"))),
   token_HEE(consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >>(iConfig.getParameter<edm::InputTag>("HEEInputTag"))),
   token_HEB(consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >>(iConfig.getParameter<edm::InputTag>("HEBInputTag"))),
-  ort_class(iConfig.getParameter<edm::FileInPath>("classifier_path").fullPath()),
-  ort_regress(iConfig.getParameter<edm::FileInPath>("regressor_path").fullPath()),
+  ort_class(iConfig.getParameter<std::string>("classifier_path")),
+  ort_regress(iConfig.getParameter<std::string>("regressor_path")),
   cname_(iConfig.getParameter<std::string>("cluster_name"))
 {
 

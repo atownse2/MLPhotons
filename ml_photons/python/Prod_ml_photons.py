@@ -22,8 +22,8 @@ process.source = cms.Source("PoolSource",
 
 process.mlphotons = cms.EDProducer(
 				'ml_photons',
-        classifier_path = cms.FileInPath("./ML_Photons/ml_photons/plugins/classifier.onnx"),
-        regressor_path = cms.FileInPath("./ML_Photons/ml_photons/plugins/regressor.onnx"),
+        classifier_path = cms.string(pwd + "/plugins/classifier.onnx"),
+        regressor_path = cms.string(pwd + "/plugins/regressor.onnx"),
 				PhoInputTag = cms.InputTag('slimmedPhotons', '', sys.argv[3]),
 				CluInputTag = cms.InputTag('reducedEgamma', 'reducedEBEEClusters', sys.argv[3]),
 				HEEInputTag = cms.InputTag('reducedEgamma', 'reducedEERecHits', sys.argv[3]),
