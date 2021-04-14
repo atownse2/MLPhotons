@@ -9,4 +9,6 @@
 /ml_photons/python/Call*
 /ml_photons/python/Run*
 /ml_photons/python/RUN*
+/ml_photons/python/*invert*
+/ml_photons/python/QCDFiles
 

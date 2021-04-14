@@ -39,8 +39,11 @@ infname = sys.argv[2][(sys.argv[2].rfind("/") + 1 ) :]
 outfname = sys.argv[4] + 'RUCLU_tree_' + infname
 
 process.out = cms.OutputModule("PoolOutputModule",
-    fileName = cms.untracked.string(outfname)
-    ,outputCommands = cms.untracked.vstring('keep *',
+    fileName = cms.untracked.string(outfname),
+    eventAutoFlushCompressedSize = cms.untracked.int32(-900),
+    compressionAlgorithm = cms.untracked.string("LZMA"),
+    compressionLevel = cms.untracked.int32(4),
+    outputCommands = cms.untracked.vstring('keep *',
      "drop *_gtStage2Digis_*_*",
      "drop *_caloStage2Digis_*_*",
      "drop *_gmtStage2Digis_*_*",
