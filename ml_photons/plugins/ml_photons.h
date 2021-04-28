@@ -79,6 +79,8 @@ class cluster
 		std::vector<int> iphis;
 		std::vector<int> ncracks;
 		std::vector<float> Es;
+    std::vector<int> xcoords;
+    std::vector<int> ycoords;
     std::vector<std::vector<float>> image;
     //std::vector<std::vector<float>> image(isize*isize, std::vector<float>(isize*isize,0.0));
 		cluster(const float &Eta, const float &Phi, const int &iEta, const int &iPhi, const float &E, const bool &nCrack);
@@ -92,8 +94,10 @@ class cluster
 	  void PRINT_Eta_Phi(std::ofstream& outfile);
 	  float getTotalE(void);
     void makeImage();
+    float compute_En(float);
 
 	};
+
 	cluster::cluster(const float &Eta, const float &Phi, const int &iEta, const int &iPhi, const float &E, const bool &nCrack)
 	{
 
@@ -187,8 +191,8 @@ class cluster
     int cxval = ietas[0];
     int cyval = iphis[0];
 
-    std::vector<int> xcoords;
-    std::vector<int> ycoords;
+    //std::vector<int> xcoords;
+    //std::vector<int> ycoords;
 
     for(unsigned int ii=0; ii<ietas.size(); ii++){
       xcoords.push_back(ietas[ii] - cxval + (isize / 2));
@@ -237,6 +241,21 @@ class cluster
 
     return;
   }
+
+  float cluster::compute_En(float n)
+  {
+    float totalE = 0.;
+    float numerator = 0.;
+    totalE = std::accumulate(Es.begin(), Es.end(), 0.0);
+    for(unsigned int ii=0; ii < xcoords.size(); ii++){
+      int xx = xcoords.at(ii);
+      int yy = ycoords.at(ii);
+      numerator += pow( (xx * xx + yy * yy), n/2 ) ;
+    }
+
+    return numerator / totalE;
+  }
+
 
 std::pair<int, float> FindNearest(cluster C1, std::vector<cluster> inC)
 {

@@ -1,1 +1,2 @@
-cmsRun Prod_ml_photons.py placeholder RECO
+rm test/out*
+cmsRun Prod_ml_photons.py placeholder RECO test/

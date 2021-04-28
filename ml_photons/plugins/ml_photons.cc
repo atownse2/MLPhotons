@@ -66,6 +66,9 @@ ml_photons::ml_photons(const edm::ParameterSet& iConfig):
   produces<std::vector<float>> (cname_+"Monopho");
   produces<std::vector<float>> (cname_+"Dipho");
   produces<std::vector<float>> (cname_+"Hadron");
+  produces<std::vector<float>> (cname_+"R1");
+  produces<std::vector<float>> (cname_+"R2");
+  produces<std::vector<float>> (cname_+"R3");
 
 }
 
@@ -148,6 +151,9 @@ ml_photons::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   std::unique_ptr<std::vector<float>> cluster_mono_( new std::vector<float> );
   std::unique_ptr<std::vector<float>> cluster_di_( new std::vector<float> );
   std::unique_ptr<std::vector<float>> cluster_had_( new std::vector<float> );
+  std::unique_ptr<std::vector<float>> cluster_r1_( new std::vector<float> );
+  std::unique_ptr<std::vector<float>> cluster_r2_( new std::vector<float> );
+  std::unique_ptr<std::vector<float>> cluster_r3_( new std::vector<float> );
 
   //Setting up data types for onnx runtime
   static const int isize = 30;
@@ -205,6 +211,10 @@ ml_photons::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     cluster_Phi_->emplace_back( C.vec.Phi() );
     cluster_E_->emplace_back( C.getTotalE() );
 
+    cluster_r1_->emplace_back( C.compute_En( 1. ) /  C.compute_En( 0. ));
+    cluster_r2_->emplace_back( C.compute_En( 2. ) /  C.compute_En( 0. ));
+    cluster_r3_->emplace_back( C.compute_En( 3. ) /  C.compute_En( 0. ));
+
     cluster_MoE_->emplace_back( regress_outputs.at(0) );
 
     cluster_mono_->emplace_back(exp( class_outputs.at(0) ) / denom);
@@ -219,6 +229,9 @@ ml_photons::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.put(std::move(cluster_mono_), cname_+"Monopho");
   iEvent.put(std::move(cluster_di_), cname_+"Dipho");
   iEvent.put(std::move(cluster_had_), cname_+"Hadron");
+  iEvent.put(std::move(cluster_r1_), cname_+"R1");
+  iEvent.put(std::move(cluster_r2_), cname_+"R2");
+  iEvent.put(std::move(cluster_r3_), cname_+"R3");
 
 }
 

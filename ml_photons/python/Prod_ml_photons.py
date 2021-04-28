@@ -13,7 +13,7 @@ process.GlobalTag.globaltag = '102X_upgrade2018_realistic_v20'
 process.load("Configuration.StandardSequences.GeometryDB_cff")
 process.load("Configuration.StandardSequences.MagneticField_cff")
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( -1) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( 100) )
 
 process.source = cms.Source("PoolSource", 
                             fileNames =
@@ -37,6 +37,7 @@ process.mlphotons = cms.EDProducer(
 
 infname = sys.argv[2][(sys.argv[2].rfind("/") + 1 ) :]
 outfname = sys.argv[4] + 'RUCLU_tree_' + infname
+#outfname = 'file:' + pwd + '/python/test/output_test.root'
 
 process.out = cms.OutputModule("PoolOutputModule",
     fileName = cms.untracked.string(outfname),
