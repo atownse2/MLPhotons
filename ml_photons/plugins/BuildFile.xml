@@ -13,5 +13,7 @@
 <use name="Geometry/CaloTopology"/>
 <use name="CondFormats/EcalObjects"/>
 <use name="CondFormats/DataRecord"/>
+<use name="PhysicsTools/UtilAlgos"/>
+<use name="FWCore/ServiceRegistry"/>
 
 <flags EDM_PLUGIN="1"/>

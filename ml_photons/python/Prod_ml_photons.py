@@ -13,13 +13,13 @@ process.GlobalTag.globaltag = '102X_upgrade2018_realistic_v20'
 process.load("Configuration.StandardSequences.GeometryDB_cff")
 process.load("Configuration.StandardSequences.MagneticField_cff")
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( -1) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( 500) )
 
 process.source = cms.Source("PoolSource", 
                             fileNames =
                             #cms.untracked.vstring('file:'+sys.argv[2])) //Local File
-                            cms.untracked.vstring("root://cmsxrootd.fnal.gov//"+sys.argv[2])) #Official MC (or other nonlocal file)
-                            #cms.untracked.vstring('file:' + pwd + '/python/test/test_gunfile.root')) #Test file
+                            #cms.untracked.vstring("root://cmsxrootd.fnal.gov//"+sys.argv[2])) #Official MC (or other nonlocal file)
+                            cms.untracked.vstring('file:' + pwd + '/python/test/test_qcd.root')) #Test file
 
 process.mlphotons = cms.EDProducer(
 				'ml_photons',
@@ -29,6 +29,7 @@ process.mlphotons = cms.EDProducer(
 				CluInputTag = cms.InputTag('reducedEgamma', 'reducedEBEEClusters', sys.argv[3]),
 				HEEInputTag = cms.InputTag('reducedEgamma', 'reducedEERecHits', sys.argv[3]),
 				HEBInputTag = cms.InputTag('reducedEgamma', 'reducedEBRecHits', sys.argv[3]),
+        genpartInputTag = cms.InputTag('prunedGenParticles', '', sys.argv[3]),
 				RHInputTag = cms.InputTag('reducedEgamma', 'reducedEBRecHits', sys.argv[3]),
         TriggerInputTag_HLT = cms.InputTag('TriggerResults', '', "HLT"),
         VtxInputTag = cms.InputTag('offlineSlimmedPrimaryVertices', '', sys.argv[3]),
