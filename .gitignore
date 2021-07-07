@@ -13,4 +13,6 @@
 /ml_photons/python/SignalRunFiles
 /ml_photons/python/QCDFiles
 /ml_photons/python/Prod_ml_photons_qcd.py
+/ml_photons/python/QCD/
+/ml_photons/python/test/
 
