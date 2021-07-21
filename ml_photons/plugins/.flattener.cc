@@ -65,9 +65,6 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
       //Primary Vertex
       const edm::InputTag svtxTag;
       const edm::EDGetTokenT<vector<reco::VertexCompositePtrCandidate>> svtxToken;
-
-      //Trigger file
-      std::string trigfile;
       
       //RUCLU
       const edm::InputTag ruclu_etaTag;
@@ -94,12 +91,11 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
 
       TTree* tree;
 
+      int TrigBit;
       int run;
       int id;
       int lumiSec;
       double wgt;
-
-      std::vector<int> trigs;
 
       std::vector<float> jet_pt;
       std::vector<float> jet_eta;
@@ -163,9 +159,6 @@ flattener::flattener(const edm::ParameterSet& iConfig):
   svtxTag (iConfig.getParameter<edm::InputTag>("svtxInputTag")),
   svtxToken (consumes<vector<reco::VertexCompositePtrCandidate>>(svtxTag)),
 
-  //Trigger file
-  trigfile(iConfig.getParameter<std::string>("tfile_path")),
-
   //RUCLU Stuff
   ruclu_etaTag (iConfig.getParameter<edm::InputTag>("ruclu_etaTag")),
   ruclu_phiTag (iConfig.getParameter<edm::InputTag>("ruclu_phiTag")),
@@ -189,7 +182,6 @@ flattener::flattener(const edm::ParameterSet& iConfig):
   hadronToken (consumes<std::vector<float>>(hadronTag)),
   moeToken (consumes<std::vector<float>>(moeTag)),
 
-
   wgt (iConfig.getParameter<double>("weightInput"))
 
 {
@@ -203,9 +195,9 @@ flattener::flattener(const edm::ParameterSet& iConfig):
   tree->Branch("run", &run, "run/i");
   tree->Branch("id", &id, "id/i");
 
-  tree->Branch("wgt", &wgt );
+  tree->Branch("trig", &TrigBit, "trig/b");
 
-  tree->Branch("triggers", &trigs);
+  tree->Branch("wgt", &wgt );
 
   tree->Branch("jet_pt", &jet_pt );
   tree->Branch("jet_eta", &jet_eta );
@@ -256,6 +248,7 @@ flattener::~flattener()
 
 // member functions
 
+
 // ------------ method called to produce the data  ------------
 void
 flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
@@ -264,38 +257,34 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
   lumiSec = iEvent.eventAuxiliary().luminosityBlock();
   id = iEvent.eventAuxiliary().id().event();
 
+  //wgt = 15.;
   
   //Triggering
   Handle<edm::TriggerResults> triggerResults;
   iEvent.getByToken(triggerResultsToken, triggerResults); // Get this event's trigger info
 
-  //Get triggers from file
-  std::ifstream myfile(trigfile.c_str());
-  if(!myfile){std::cout << "Can't open file" << std::endl;}
-  std::string str;
-  std::vector<std::string> datatriggernames;
-  while(std::getline(myfile, str)){
-    datatriggernames.push_back(str);
-  }
-  myfile.close();
-  //
-
-  int tcount = 0;
+  int trig_low = 0;
+  int trig_high = 0;
+  int trig_single = 0;
 
   const edm::TriggerNames &names = iEvent.triggerNames(*triggerResults); // get all trigger names
-  for( unsigned int dtn = 0; dtn < datatriggernames.size(); dtn += 1 ){ //Loop through trigger name array
-    for (unsigned int i = 0, n = triggerResults->size(); i < n; ++i) // loop aver all names
+  for (unsigned int i = 0, n = triggerResults->size(); i < n; ++i) // loop aver all names
+  {
+    if (names.triggerName(i).find("HLT_DoublePhoton60")!=std::string::npos) // if passes a specific trigger:
     {
-      if (names.triggerName(i).find( datatriggernames.at(dtn) )!=std::string::npos) // if passes a specific trigger:
-      {
-        if (triggerResults->accept(i)) {
-          trigs.push_back(1);
-          tcount += 1;
-          }
-        else{trigs.push_back(0);}
-      }
+      if (triggerResults->accept(i)) {trig_low = 1;}
+    }
+    if (names.triggerName(i).find("HLT_DoublePhoton85")!=std::string::npos) // if passes a specific trigger:
+    {
+      if (triggerResults->accept(i)) {trig_high = 1;}
+    }
+      if (names.triggerName(i).find("HLT_Photon175")!=std::string::npos) // if passes a specific trigger:
+    {
+      if (triggerResults->accept(i)) {trig_single = 1;}
     }
   }
+    
+  TrigBit = ( ( (trig_low << 1) + trig_high ) << 1 ) + trig_single;
 
   //Jets
   Handle<vector<pat::Jet>> patJet;
@@ -410,8 +399,6 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
 
 void 
 flattener::clearVars(){
-
-  trigs.clear();
 
   jet_pt.clear();
   jet_eta.clear();

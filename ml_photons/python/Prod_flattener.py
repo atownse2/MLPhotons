@@ -23,7 +23,7 @@ process.source = cms.Source("PoolSource",
 
 infname = sys.argv[2]
 fname_only = infname.split("/")[-1]
-outfname = "/cms/sclark/RUCLU_Outputs/Data/2017/flat/" + sys.argv[2][infname.find("Run"):infname.rfind("/")+1] + fname_only.replace("RUCLU","flat")
+outfname = "test/flatout.root"
 print(outfname)
 
 process.TFileService = cms.Service("TFileService",
@@ -51,6 +51,8 @@ process.flattener = cms.EDAnalyzer(
         monophoInputTag = cms.InputTag('mlphotons', 'RUCLUsMonopho', "mlphotons"),
         hadronInputTag = cms.InputTag('mlphotons', 'RUCLUsHadron', "mlphotons"),
         moeInputTag = cms.InputTag('mlphotons', 'RUCLUsMoE', "mlphotons"),
+
+        tfile_path = cms.string(pwd + "/plugins/tnames16.txt"),
 
         weightInput = cms.double(float(sys.argv[3]) / float(sys.argv[4]))
 

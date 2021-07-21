@@ -2,6 +2,7 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <fstream>
 
 // ROOT includes
 #include <TTree.h>
