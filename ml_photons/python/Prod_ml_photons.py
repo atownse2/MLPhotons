@@ -19,7 +19,7 @@ process.source = cms.Source("PoolSource",
                             fileNames =
                             #cms.untracked.vstring('file:'+sys.argv[2])) //Local File
                             #cms.untracked.vstring("root://cmsxrootd.fnal.gov//"+sys.argv[2])) #Official MC (or other nonlocal file)
-                            cms.untracked.vstring('file:' + pwd + '/python/test/test_data16.root')) #Test file
+                            cms.untracked.vstring('file:' + pwd + '/python/test/test_data18.root')) #Test file
 
 process.mlphotons = cms.EDProducer(
 				'ml_photons',
