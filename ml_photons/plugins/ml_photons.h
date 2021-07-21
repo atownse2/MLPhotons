@@ -27,6 +27,7 @@
 #include "DataFormats/Math/interface/deltaR.h"
 #include "DataFormats/JetReco/interface/Jet.h"
 #include "DataFormats/CaloTowers/interface/CaloTowerCollection.h"
+#include "DataFormats/BTauReco/interface/JetTag.h"
 
 #include "TLorentzVector.h"
 #include "TVector3.h"

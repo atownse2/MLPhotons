@@ -15,5 +15,6 @@
 <use name="CondFormats/DataRecord"/>
 <use name="PhysicsTools/UtilAlgos"/>
 <use name="FWCore/ServiceRegistry"/>
+<use name="DataFormats/BTauReco"/>
 
 <flags EDM_PLUGIN="1"/>

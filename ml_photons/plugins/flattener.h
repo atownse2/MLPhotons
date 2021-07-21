@@ -61,6 +61,7 @@
 #include "DataFormats/Math/interface/deltaR.h"
 #include "DataFormats/JetReco/interface/Jet.h"
 #include "DataFormats/CaloTowers/interface/CaloTowerCollection.h"
+#include "DataFormats/BTauReco/interface/JetTag.h"
 
 #include "L1Trigger/L1TGlobal/interface/L1TGlobalUtil.h"
 #include "DataFormats/L1TGlobal/interface/GlobalAlgBlk.h"

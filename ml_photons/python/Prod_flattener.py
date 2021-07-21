@@ -34,11 +34,11 @@ process.flattener = cms.EDAnalyzer(
 				'flattener',
         TriggerInputTag_HLT = cms.InputTag('TriggerResults', '', "HLT"),
 
-        patjetInputTag = cms.InputTag('slimmedJetsPuppi', '', "PAT"),#TODO: PAT might be different for data, qcd ,etc. Make arg
-        metInputTag = cms.InputTag('slimmedMETsPuppi', '', "PAT"),#TODO: PAT might be different for data, qcd ,etc. Make arg
-        muonInputTag = cms.InputTag('slimmedMuons', '', "PAT"),#TODO: PAT might be different for data, qcd ,etc. Make arg
-        pvtxInputTag = cms.InputTag('offlineSlimmedPrimaryVertices', '', "PAT"),
-        svtxInputTag = cms.InputTag('slimmedSecondaryVertices', '', "PAT"),
+        patjetInputTag = cms.InputTag('slimmedJetsPuppi', '', sys.argv[3]),
+        metInputTag = cms.InputTag('slimmedMETsPuppi', '', sys.argv[3]),
+        muonInputTag = cms.InputTag('slimmedMuons', '', sys.argv[3]),
+        pvtxInputTag = cms.InputTag('offlineSlimmedPrimaryVertices', '', sys.argv[3]),
+        svtxInputTag = cms.InputTag('slimmedSecondaryVertices', '', sys.argv[3]),
 
 
         ruclu_etaTag = cms.InputTag('mlphotons', 'RUCLUsEta', "mlphotons"),
@@ -53,8 +53,9 @@ process.flattener = cms.EDAnalyzer(
         moeInputTag = cms.InputTag('mlphotons', 'RUCLUsMoE', "mlphotons"),
 
         tfile_path = cms.string(pwd + "/plugins/tnames16.txt"),
+        btag_name = cms.string("pfCombinedInclusiveSecondaryVertexV2BJetTags"), # See: https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation#Different_SF_campaigns
 
-        weightInput = cms.double(float(sys.argv[3]) / float(sys.argv[4]))
+        weightInput = cms.double(float(sys.argv[4]) / float(sys.argv[5]))
 
 			)
 

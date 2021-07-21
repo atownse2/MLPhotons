@@ -49,7 +49,7 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
       //Jets
       const edm::InputTag patjetTag;
       const edm::EDGetTokenT<vector<pat::Jet>> patjetToken;
-      
+
       //METs
       const edm::InputTag metTag;
       const edm::EDGetTokenT<vector<pat::MET>> metToken;
@@ -68,6 +68,9 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
 
       //Trigger file
       std::string trigfile;
+      
+      //bTagger Name
+      std::string btagName;
       
       //RUCLU
       const edm::InputTag ruclu_etaTag;
@@ -106,6 +109,7 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
       std::vector<float> jet_phi;
       std::vector<float> jet_energy;
       std::vector<float> jet_mass;
+      std::vector<float> jet_btag;
 
       std::vector<float> met_pt;
       std::vector<float> met_eta;
@@ -165,6 +169,9 @@ flattener::flattener(const edm::ParameterSet& iConfig):
 
   //Trigger file
   trigfile(iConfig.getParameter<std::string>("tfile_path")),
+  
+  //Trigger file
+  btagName(iConfig.getParameter<std::string>("btag_name")),
 
   //RUCLU Stuff
   ruclu_etaTag (iConfig.getParameter<edm::InputTag>("ruclu_etaTag")),
@@ -212,6 +219,7 @@ flattener::flattener(const edm::ParameterSet& iConfig):
   tree->Branch("jet_phi", &jet_phi );
   tree->Branch("jet_energy", &jet_energy );
   tree->Branch("jet_mass", &jet_mass );
+  tree->Branch("jet_btag", &jet_btag );
 
   tree->Branch("met_pt", &met_pt );
   tree->Branch("met_eta", &met_eta );
@@ -297,6 +305,21 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
     }
   }
 
+  /*
+  //  Get b tag information
+  Handle<reco::JetTagCollection> bTagHandle;
+  iEvent.getByLabel("combinedSecondaryVertexBJetTags", bTagHandle);
+  //iEvent.getByLabel("pfCombinedInclusiveSecondaryVertexV2BJetTags", bTagHandle);
+  const reco::JetTagCollection & bTags = *(bTagHandle.product());
+
+  //Loop over jets and study b tag info.
+  for (unsigned int i = 0; i != bTags.size(); ++i) {
+      std::cout<<" Jet "<< i 
+        <<" has b tag discriminator = "<<bTags[i].second
+        << " and jet Pt = "<<bTags[i].first->pt()<<std::endl;
+  }
+  */
+
   //Jets
   Handle<vector<pat::Jet>> patJet;
   iEvent.getByToken(patjetToken, patJet); // Get this event's trigger info
@@ -306,6 +329,7 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
     jet_phi.push_back(jet_iter->phi());
     jet_energy.push_back(jet_iter->energy());
     jet_mass.push_back(jet_iter->mass());
+    jet_btag.push_back(jet_iter->bDiscriminator(btagName.c_str()));
   }
 
   //METs
@@ -418,6 +442,7 @@ flattener::clearVars(){
   jet_phi.clear();
   jet_energy.clear();
   jet_mass.clear();
+  jet_btag.clear();
 
   met_pt.clear();
   met_eta.clear();
