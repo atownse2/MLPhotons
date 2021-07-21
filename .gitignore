@@ -15,4 +15,6 @@
 /ml_photons/python/Prod_ml_photons_qcd.py
 /ml_photons/python/QCD/
 /ml_photons/python/test/
+ml_photons/python/Signal/
+ml_photons/python/ParticleGun/
 
