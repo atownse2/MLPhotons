@@ -1,3 +1,3 @@
 rm test/out*
-cmsRun Prod_ml_photons.py placeholder RECO test/
-cmsRun Prod_flattener.py test/RUCLU_tree_placeholder RECO 1 1
+cmsRun Prod_ml_photons.py placeholder PAT test/
+cmsRun Prod_flattenerMatching.py test/RUCLU_tree_placeholder PAT 1 1
