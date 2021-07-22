@@ -305,21 +305,6 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
     }
   }
 
-  /*
-  //  Get b tag information
-  Handle<reco::JetTagCollection> bTagHandle;
-  iEvent.getByLabel("combinedSecondaryVertexBJetTags", bTagHandle);
-  //iEvent.getByLabel("pfCombinedInclusiveSecondaryVertexV2BJetTags", bTagHandle);
-  const reco::JetTagCollection & bTags = *(bTagHandle.product());
-
-  //Loop over jets and study b tag info.
-  for (unsigned int i = 0; i != bTags.size(); ++i) {
-      std::cout<<" Jet "<< i 
-        <<" has b tag discriminator = "<<bTags[i].second
-        << " and jet Pt = "<<bTags[i].first->pt()<<std::endl;
-  }
-  */
-
   //Jets
   Handle<vector<pat::Jet>> patJet;
   iEvent.getByToken(patjetToken, patJet); // Get this event's trigger info
