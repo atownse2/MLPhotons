@@ -101,8 +101,8 @@ class flattenerMatching : public edm::one::EDAnalyzer<edm::one::SharedResources,
 
       TTree* tree;
 
-      int run;
-      int id;
+      long run;
+      long id;
       int lumiSec;
       double wgt;
 
