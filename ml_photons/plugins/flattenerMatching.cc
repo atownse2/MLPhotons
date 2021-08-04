@@ -106,6 +106,8 @@ class flattenerMatching : public edm::one::EDAnalyzer<edm::one::SharedResources,
       int lumiSec;
       double wgt;
 
+      int isDirectPrompt;
+
       std::vector<int> trigs;
 
       std::vector<float> jet_pt;
@@ -218,6 +220,8 @@ flattenerMatching::flattenerMatching(const edm::ParameterSet& iConfig):
   tree->Branch("run", &run, "run/i");
   tree->Branch("id", &id, "id/i");
 
+  tree->Branch("isDirectPrompt", &isDirectPrompt, "isDirectPrompt/i");
+
   tree->Branch("wgt", &wgt );
 
   tree->Branch("triggers", &trigs);
@@ -313,6 +317,32 @@ flattenerMatching::analyze( const edm::Event & iEvent, const edm::EventSetup & i
       }
     }
   }
+  
+  //Find Prompt Events
+  //Loop through gen particles
+  isDirectPrompt = 0;
+  Handle<vector<reco::GenParticle>> genpart;
+  iEvent.getByToken(genpartToken, genpart);
+  for (auto gp_iter = genpart->begin(); gp_iter != genpart->end(); ++gp_iter){
+    if (gp_iter->pdgId() == 22 && gp_iter->status()==1 && (gp_iter->mother()->pdgId() <= 22 || gp_iter->mother()->pdgId() <= 2212) ){
+      //Prompt photon. Now get direct prompt photons
+      float pho_eta = gp_iter->eta();
+      float pho_phi = gp_iter->phi();
+      for (auto gp_iter2 = genpart->begin(); gp_iter2 != genpart->end(); ++gp_iter2){
+        if ( (gp_iter2->pdgId() < 8 || gp_iter2->pdgId()==21) && gp_iter2->status()==23 ){
+          float qg_eta = gp_iter2->eta();
+          float qg_phi = gp_iter2->phi();
+          float deta = pho_eta - qg_eta;
+          float dphi = pho_phi - qg_phi;
+
+          if ( sqrt( deta*deta + dphi*dphi ) < 0.4 ){
+            isDirectPrompt=1;
+          }
+
+        }
+      }
+    }
+  } //genpart loop
 
 
   //Jets
