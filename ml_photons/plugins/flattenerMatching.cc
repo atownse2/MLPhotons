@@ -324,7 +324,7 @@ flattenerMatching::analyze( const edm::Event & iEvent, const edm::EventSetup & i
   Handle<vector<reco::GenParticle>> genpart;
   iEvent.getByToken(genpartToken, genpart);
   for (auto gp_iter = genpart->begin(); gp_iter != genpart->end(); ++gp_iter){
-    if (gp_iter->pdgId() == 22 && gp_iter->status()==1 && (gp_iter->mother()->pdgId() <= 22 || gp_iter->mother()->pdgId() <= 2212) ){
+    if (gp_iter->pdgId() == 22 && gp_iter->status()==1 && (gp_iter->mother()->pdgId() <= 22 || gp_iter->mother()->pdgId() == 2212) ){
       //Prompt photon. Now get direct prompt photons
       float pho_eta = gp_iter->eta();
       float pho_phi = gp_iter->phi();
@@ -335,7 +335,7 @@ flattenerMatching::analyze( const edm::Event & iEvent, const edm::EventSetup & i
           float deta = pho_eta - qg_eta;
           float dphi = pho_phi - qg_phi;
 
-          if ( sqrt( deta*deta + dphi*dphi ) < 0.4 ){
+          if ( sqrt( deta*deta + dphi*dphi ) > 0.4 ){
             isDirectPrompt=1;
           }
 
