@@ -35,8 +35,8 @@ process.flattenerMatching = cms.EDAnalyzer(
         TriggerInputTag_HLT = cms.InputTag('TriggerResults', '', "HLT"),
 
         genpartInputTag = cms.InputTag('prunedGenParticles', '', sys.argv[3]),
-        patjetInputTag = cms.InputTag('slimmedJetsPuppi', '', sys.argv[3]),
-        metInputTag = cms.InputTag('slimmedMETsPuppi', '', sys.argv[3]),
+        patjetInputTag = cms.InputTag('slimmedJets', '', sys.argv[3]),
+        metInputTag = cms.InputTag('slimmedMETs', '', sys.argv[3]),
         muonInputTag = cms.InputTag('slimmedMuons', '', sys.argv[3]),
         pvtxInputTag = cms.InputTag('offlineSlimmedPrimaryVertices', '', sys.argv[3]),
         svtxInputTag = cms.InputTag('slimmedSecondaryVertices', '', sys.argv[3]),
