@@ -57,6 +57,10 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
       //Muons
       const edm::InputTag muonTag;
       const edm::EDGetTokenT<vector<pat::Muon>> muonToken;
+      
+      //PAT Photons
+      const edm::InputTag patPhoTag;
+      const edm::EDGetTokenT<vector<pat::Photon>> patPhoToken;
 
       //Primary Vertex
       const edm::InputTag pvtxTag;
@@ -123,6 +127,12 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
       std::vector<float> muon_energy;
       std::vector<float> muon_mass;
 
+      std::vector<float> patpho_pt;
+      std::vector<float> patpho_eta;
+      std::vector<float> patpho_phi;
+      std::vector<float> patpho_energy;
+      std::vector<float> patpho_mass;
+
       std::vector<float> pvtx_x;
       std::vector<float> pvtx_y;
       std::vector<float> pvtx_z;
@@ -161,6 +171,9 @@ flattener::flattener(const edm::ParameterSet& iConfig):
   muonTag (iConfig.getParameter<edm::InputTag>("muonInputTag")),
   muonToken (consumes<vector<pat::Muon>>(muonTag)),
 
+  patPhoTag (iConfig.getParameter<edm::InputTag>("patPhoInputTag")),
+  patPhoToken (consumes<vector<pat::Photon>>(patPhoTag)),
+
   pvtxTag (iConfig.getParameter<edm::InputTag>("pvtxInputTag")),
   pvtxToken (consumes<vector<reco::Vertex>>(pvtxTag)),
 
@@ -195,7 +208,6 @@ flattener::flattener(const edm::ParameterSet& iConfig):
   diphoToken (consumes<std::vector<float>>(diphoTag)), //dcom
   hadronToken (consumes<std::vector<float>>(hadronTag)),
   moeToken (consumes<std::vector<float>>(moeTag)),
-
 
   wgt (iConfig.getParameter<double>("weightInput"))
 
@@ -232,6 +244,12 @@ flattener::flattener(const edm::ParameterSet& iConfig):
   tree->Branch("muon_phi", &muon_phi );
   tree->Branch("muon_energy", &muon_energy );
   tree->Branch("muon_mass", &muon_mass );
+
+  tree->Branch("patpho_pt", &patpho_pt );
+  tree->Branch("patpho_eta", &patpho_eta );
+  tree->Branch("patpho_phi", &patpho_phi );
+  tree->Branch("patpho_energy", &patpho_energy );
+  tree->Branch("patpho_mass", &patpho_mass );
 
   tree->Branch("pvtx_x", &pvtx_x );
   tree->Branch("pvtx_y", &pvtx_y );
@@ -339,6 +357,17 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
     muon_mass.push_back(muon_iter->mass());
   }
 
+  //PAT Photons
+  Handle<vector<pat::Photon>> patpho;
+  iEvent.getByToken(patPhoToken, patpho); // Get this event's trigger info
+  for (auto patpho_iter = patpho->begin(); patpho_iter != patpho->end(); ++patpho_iter){
+    patpho_pt.push_back(patpho_iter->pt());
+    patpho_eta.push_back(patpho_iter->eta());
+    patpho_phi.push_back(patpho_iter->phi());
+    patpho_energy.push_back(patpho_iter->energy());
+    patpho_mass.push_back(patpho_iter->mass());
+  }
+
   //Primary Vertex
   Handle<vector<reco::Vertex>> pvtx;
   iEvent.getByToken(pvtxToken, pvtx); // Get this event's trigger info
@@ -440,6 +469,12 @@ flattener::clearVars(){
   muon_phi.clear();
   muon_energy.clear();
   muon_mass.clear();
+
+  patpho_pt.clear();
+  patpho_eta.clear();
+  patpho_phi.clear();
+  patpho_energy.clear();
+  patpho_mass.clear();
 
   pvtx_x.clear();
   pvtx_y.clear();

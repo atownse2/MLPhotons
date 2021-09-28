@@ -19,3 +19,6 @@ ml_photons/python/Signal/
 ml_photons/python/ParticleGun/
 ml_photons/python/Data/
 ml_photons/python/GJets/
+ml_photons/python/Heavy_QCD/
+ml_photons/python/SingleMuon/
+ml_photons/python/ttbar/
