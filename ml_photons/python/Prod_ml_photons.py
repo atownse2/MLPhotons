@@ -13,13 +13,13 @@ process.GlobalTag.globaltag = '102X_upgrade2018_realistic_v20'
 process.load("Configuration.StandardSequences.GeometryDB_cff")
 process.load("Configuration.StandardSequences.MagneticField_cff")
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( 1000) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( 100) )
 
 process.source = cms.Source("PoolSource", 
                             fileNames =
-                            #cms.untracked.vstring('file:'+sys.argv[2])) //Local File
+                            cms.untracked.vstring('file:'+sys.argv[2])) #Local File
                             #cms.untracked.vstring("root://cmsxrootd.fnal.gov//"+sys.argv[2])) #Official MC (or other nonlocal file)
-                            cms.untracked.vstring('file:' + pwd + '/python/test/test_qcd.root')) #Test file
+                            #cms.untracked.vstring('file:' + pwd + '/python/test/test_qcd.root')) #Test file
 
 process.mlphotons = cms.EDProducer(
 				'ml_photons',

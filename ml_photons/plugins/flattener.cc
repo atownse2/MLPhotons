@@ -57,6 +57,10 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
       //Muons
       const edm::InputTag muonTag;
       const edm::EDGetTokenT<vector<pat::Muon>> muonToken;
+
+      //Electrons
+      const edm::InputTag electronTag;
+      const edm::EDGetTokenT<vector<pat::Electron>> electronToken;
       
       //PAT Photons
       const edm::InputTag patPhoTag;
@@ -127,6 +131,12 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
       std::vector<float> muon_energy;
       std::vector<float> muon_mass;
 
+      std::vector<float> electron_pt;
+      std::vector<float> electron_eta;
+      std::vector<float> electron_phi;
+      std::vector<float> electron_energy;
+      std::vector<float> electron_mass;
+
       std::vector<float> patpho_pt;
       std::vector<float> patpho_eta;
       std::vector<float> patpho_phi;
@@ -170,6 +180,9 @@ flattener::flattener(const edm::ParameterSet& iConfig):
 
   muonTag (iConfig.getParameter<edm::InputTag>("muonInputTag")),
   muonToken (consumes<vector<pat::Muon>>(muonTag)),
+
+  electronTag (iConfig.getParameter<edm::InputTag>("electronInputTag")),
+  electronToken (consumes<vector<pat::Electron>>(electronTag)),
 
   patPhoTag (iConfig.getParameter<edm::InputTag>("patPhoInputTag")),
   patPhoToken (consumes<vector<pat::Photon>>(patPhoTag)),
@@ -244,6 +257,12 @@ flattener::flattener(const edm::ParameterSet& iConfig):
   tree->Branch("muon_phi", &muon_phi );
   tree->Branch("muon_energy", &muon_energy );
   tree->Branch("muon_mass", &muon_mass );
+
+  tree->Branch("electron_pt", &electron_pt );
+  tree->Branch("electron_eta", &electron_eta );
+  tree->Branch("electron_phi", &electron_phi );
+  tree->Branch("electron_energy", &electron_energy );
+  tree->Branch("electron_mass", &electron_mass );
 
   tree->Branch("patpho_pt", &patpho_pt );
   tree->Branch("patpho_eta", &patpho_eta );
@@ -355,6 +374,17 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
     muon_phi.push_back(muon_iter->phi());
     muon_energy.push_back(muon_iter->energy());
     muon_mass.push_back(muon_iter->mass());
+  }
+
+  //Electrons
+  Handle<vector<pat::Electron>> electron;
+  iEvent.getByToken(electronToken, electron); // Get this event's trigger info
+  for (auto electron_iter = electron->begin(); electron_iter != electron->end(); ++electron_iter){
+    electron_pt.push_back(electron_iter->pt());
+    electron_eta.push_back(electron_iter->eta());
+    electron_phi.push_back(electron_iter->phi());
+    electron_energy.push_back(electron_iter->energy());
+    electron_mass.push_back(electron_iter->mass());
   }
 
   //PAT Photons
@@ -469,6 +499,12 @@ flattener::clearVars(){
   muon_phi.clear();
   muon_energy.clear();
   muon_mass.clear();
+
+  electron_pt.clear();
+  electron_eta.clear();
+  electron_phi.clear();
+  electron_energy.clear();
+  electron_mass.clear();
 
   patpho_pt.clear();
   patpho_eta.clear();
