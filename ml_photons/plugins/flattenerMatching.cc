@@ -62,6 +62,14 @@ class flattenerMatching : public edm::one::EDAnalyzer<edm::one::SharedResources,
       const edm::InputTag muonTag;
       const edm::EDGetTokenT<vector<pat::Muon>> muonToken;
 
+      //Electrons
+      const edm::InputTag electronTag;
+      const edm::EDGetTokenT<vector<pat::Electron>> electronToken;
+      
+      //PAT Photons
+      const edm::InputTag patPhoTag;
+      const edm::EDGetTokenT<vector<pat::Photon>> patPhoToken;
+
       //Primary Vertex
       const edm::InputTag pvtxTag;
       const edm::EDGetTokenT<vector<reco::Vertex>> pvtxToken;
@@ -130,6 +138,18 @@ class flattenerMatching : public edm::one::EDAnalyzer<edm::one::SharedResources,
       std::vector<float> muon_energy;
       std::vector<float> muon_mass;
 
+      std::vector<float> electron_pt;
+      std::vector<float> electron_eta;
+      std::vector<float> electron_phi;
+      std::vector<float> electron_energy;
+      std::vector<float> electron_mass;
+
+      std::vector<float> patpho_pt;
+      std::vector<float> patpho_eta;
+      std::vector<float> patpho_phi;
+      std::vector<float> patpho_energy;
+      std::vector<float> patpho_mass;
+
       std::vector<float> pvtx_x;
       std::vector<float> pvtx_y;
       std::vector<float> pvtx_z;
@@ -170,6 +190,12 @@ flattenerMatching::flattenerMatching(const edm::ParameterSet& iConfig):
 
   muonTag (iConfig.getParameter<edm::InputTag>("muonInputTag")),
   muonToken (consumes<vector<pat::Muon>>(muonTag)),
+
+  electronTag (iConfig.getParameter<edm::InputTag>("electronInputTag")),
+  electronToken (consumes<vector<pat::Electron>>(electronTag)),
+
+  patPhoTag (iConfig.getParameter<edm::InputTag>("patPhoInputTag")),
+  patPhoToken (consumes<vector<pat::Photon>>(patPhoTag)),
 
   pvtxTag (iConfig.getParameter<edm::InputTag>("pvtxInputTag")),
   pvtxToken (consumes<vector<reco::Vertex>>(pvtxTag)),
@@ -245,6 +271,18 @@ flattenerMatching::flattenerMatching(const edm::ParameterSet& iConfig):
   tree->Branch("muon_phi", &muon_phi );
   tree->Branch("muon_energy", &muon_energy );
   tree->Branch("muon_mass", &muon_mass );
+
+  tree->Branch("electron_pt", &electron_pt );
+  tree->Branch("electron_eta", &electron_eta );
+  tree->Branch("electron_phi", &electron_phi );
+  tree->Branch("electron_energy", &electron_energy );
+  tree->Branch("electron_mass", &electron_mass );
+
+  tree->Branch("patpho_pt", &patpho_pt );
+  tree->Branch("patpho_eta", &patpho_eta );
+  tree->Branch("patpho_phi", &patpho_phi );
+  tree->Branch("patpho_energy", &patpho_energy );
+  tree->Branch("patpho_mass", &patpho_mass );
 
   tree->Branch("pvtx_x", &pvtx_x );
   tree->Branch("pvtx_y", &pvtx_y );
@@ -405,6 +443,28 @@ flattenerMatching::analyze( const edm::Event & iEvent, const edm::EventSetup & i
     muon_mass.push_back(muon_iter->mass());
   }
 
+  //Electrons
+  Handle<vector<pat::Electron>> electron;
+  iEvent.getByToken(electronToken, electron); // Get this event's trigger info
+  for (auto electron_iter = electron->begin(); electron_iter != electron->end(); ++electron_iter){
+     electron_pt.push_back(electron_iter->pt());
+     electron_eta.push_back(electron_iter->eta());
+     electron_phi.push_back(electron_iter->phi());
+     electron_energy.push_back(electron_iter->energy());
+     electron_mass.push_back(electron_iter->mass());
+   }
+  
+  //PAT Photons
+  Handle<vector<pat::Photon>> patpho;
+  iEvent.getByToken(patPhoToken, patpho); // Get this event's trigger info
+  for (auto patpho_iter = patpho->begin(); patpho_iter != patpho->end(); ++patpho_iter){
+     patpho_pt.push_back(patpho_iter->pt());
+     patpho_eta.push_back(patpho_iter->eta());
+     patpho_phi.push_back(patpho_iter->phi());
+     patpho_energy.push_back(patpho_iter->energy());
+     patpho_mass.push_back(patpho_iter->mass());
+   }
+
   //Primary Vertex
   Handle<vector<reco::Vertex>> pvtx;
   iEvent.getByToken(pvtxToken, pvtx); // Get this event's trigger info
@@ -507,6 +567,18 @@ flattenerMatching::clearVars(){
   muon_phi.clear();
   muon_energy.clear();
   muon_mass.clear();
+
+  electron_pt.clear();
+  electron_eta.clear();
+  electron_phi.clear();
+  electron_energy.clear();
+  electron_mass.clear();
+
+  patpho_pt.clear();
+  patpho_eta.clear();
+  patpho_phi.clear();
+  patpho_energy.clear();
+  patpho_mass.clear();
 
   pvtx_x.clear();
   pvtx_y.clear();
