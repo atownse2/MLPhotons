@@ -108,7 +108,7 @@ ml_photons::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   float maxE = 0.;
   int minEta = 999; int maxEta = -999; int minPhi = 999; int maxPhi = -999; //FIXME take out minmax stuff
   for ( edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit>>::const_iterator cBegin = HEB->begin(), cEnd = HEB->end(), ic = cBegin; ic != cEnd; ++ic )
-  { // Loop over the crystals in the EcalRecHitas collection
+  { // Loop over the crystals in the EcalRecHits collection
     if (ic->energy() > 0.) // let's do some zero suppression to save space
     {
 

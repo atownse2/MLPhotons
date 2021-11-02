@@ -344,7 +344,7 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
 
   //Jets
   Handle<vector<pat::Jet>> patJet;
-  iEvent.getByToken(patjetToken, patJet); // Get this event's trigger info
+  iEvent.getByToken(patjetToken, patJet); 
   for (auto jet_iter = patJet->begin(); jet_iter != patJet->end(); ++jet_iter){
     jet_pt.push_back(jet_iter->pt());
     jet_eta.push_back(jet_iter->eta());
@@ -356,7 +356,7 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
 
   //METs
   Handle<vector<pat::MET>> met;
-  iEvent.getByToken(metToken, met); // Get this event's trigger info
+  iEvent.getByToken(metToken, met); 
   for (auto met_iter = met->begin(); met_iter != met->end(); ++met_iter){
     met_pt.push_back(met_iter->pt());
     met_eta.push_back(met_iter->eta());
@@ -367,7 +367,7 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
   
   //Muons
   Handle<vector<pat::Muon>> muon;
-  iEvent.getByToken(muonToken, muon); // Get this event's trigger info
+  iEvent.getByToken(muonToken, muon);
   for (auto muon_iter = muon->begin(); muon_iter != muon->end(); ++muon_iter){
     muon_pt.push_back(muon_iter->pt());
     muon_eta.push_back(muon_iter->eta());
@@ -378,7 +378,7 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
 
   //Electrons
   Handle<vector<pat::Electron>> electron;
-  iEvent.getByToken(electronToken, electron); // Get this event's trigger info
+  iEvent.getByToken(electronToken, electron); 
   for (auto electron_iter = electron->begin(); electron_iter != electron->end(); ++electron_iter){
     electron_pt.push_back(electron_iter->pt());
     electron_eta.push_back(electron_iter->eta());
@@ -389,7 +389,7 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
 
   //PAT Photons
   Handle<vector<pat::Photon>> patpho;
-  iEvent.getByToken(patPhoToken, patpho); // Get this event's trigger info
+  iEvent.getByToken(patPhoToken, patpho); 
   for (auto patpho_iter = patpho->begin(); patpho_iter != patpho->end(); ++patpho_iter){
     patpho_pt.push_back(patpho_iter->pt());
     patpho_eta.push_back(patpho_iter->eta());
@@ -400,7 +400,7 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
 
   //Primary Vertex
   Handle<vector<reco::Vertex>> pvtx;
-  iEvent.getByToken(pvtxToken, pvtx); // Get this event's trigger info
+  iEvent.getByToken(pvtxToken, pvtx);
   for (auto pvtx_iter = pvtx->begin(); pvtx_iter != pvtx->end(); ++pvtx_iter){
     pvtx_x.push_back(pvtx_iter->x());
     pvtx_y.push_back(pvtx_iter->y());
@@ -411,7 +411,7 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
 
   //Secondary Vertex
   Handle<vector<reco::VertexCompositePtrCandidate>> svtx;
-  iEvent.getByToken(svtxToken, svtx); // Get this event's trigger info
+  iEvent.getByToken(svtxToken, svtx);
   for (auto svtx_iter = svtx->begin(); svtx_iter != svtx->end(); ++svtx_iter){
     svtx_x.push_back(svtx_iter->vx());
     svtx_y.push_back(svtx_iter->vy());

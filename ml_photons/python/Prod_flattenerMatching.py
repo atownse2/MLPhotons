@@ -38,6 +38,8 @@ process.flattenerMatching = cms.EDAnalyzer(
         patjetInputTag = cms.InputTag('slimmedJets', '', sys.argv[3]),
         metInputTag = cms.InputTag('slimmedMETs', '', sys.argv[3]),
         muonInputTag = cms.InputTag('slimmedMuons', '', sys.argv[3]),
+        electronInputTag = cms.InputTag('slimmedElectrons', '', sys.argv[3]),
+        patPhoInputTag = cms.InputTag('slimmedPhotons', '', sys.argv[3]),
         pvtxInputTag = cms.InputTag('offlineSlimmedPrimaryVertices', '', sys.argv[3]),
         svtxInputTag = cms.InputTag('slimmedSecondaryVertices', '', sys.argv[3]),
 
