@@ -25,10 +25,10 @@ using namespace edm;
 using namespace fastjet;
 using namespace fastjet::contrib;
 
-class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::one::WatchRuns> {
+class flattenerImg : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::one::WatchRuns> {
    public:
-      explicit flattener( const edm::ParameterSet& );
-      ~flattener() override;
+      explicit flattenerImg( const edm::ParameterSet& );
+      ~flattenerImg() override;
 
       static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
@@ -81,6 +81,7 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
       std::string btagName;
       
       //RUCLU
+      const edm::InputTag ruclu_imgTag;
       const edm::InputTag ruclu_etaTag;
       const edm::InputTag ruclu_phiTag;
       const edm::InputTag ruclu_energyTag;
@@ -92,6 +93,7 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
       const edm::InputTag hadronTag;
       const edm::InputTag moeTag;
 
+      const edm::EDGetTokenT<std::vector<std::string>> ruclu_imgToken;
       const edm::EDGetTokenT<std::vector<float>> ruclu_etaToken;
       const edm::EDGetTokenT<std::vector<float>> ruclu_phiToken;
       const edm::EDGetTokenT<std::vector<float>> ruclu_energyToken;
@@ -148,7 +150,6 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
       std::vector<float> pvtx_z;
       std::vector<float> pvtx_chi2;
       std::vector<float> pvtx_ndof;
-      std::vector<int> pvtx_size;
 
       std::vector<float> svtx_x;
       std::vector<float> svtx_y;
@@ -156,6 +157,7 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
       std::vector<float> svtx_chi2;
       std::vector<float> svtx_ndof;
 
+      std::vector<std::string> ruclu_imgs;
       std::vector<float> ruclu_etas;
       std::vector<float> ruclu_phis;
       std::vector<float> ruclu_energys;
@@ -169,7 +171,7 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
 
   };
 
-flattener::flattener(const edm::ParameterSet& iConfig):
+flattenerImg::flattenerImg(const edm::ParameterSet& iConfig):
   triggerResultsTag (iConfig.getParameter<edm::InputTag>("TriggerInputTag_HLT")),
   triggerResultsToken (consumes<edm::TriggerResults>(triggerResultsTag)),
 
@@ -201,6 +203,7 @@ flattener::flattener(const edm::ParameterSet& iConfig):
   btagName(iConfig.getParameter<std::string>("btag_name")),
 
   //RUCLU Stuff
+  ruclu_imgTag (iConfig.getParameter<edm::InputTag>("ruclu_imgTag")),
   ruclu_etaTag (iConfig.getParameter<edm::InputTag>("ruclu_etaTag")),
   ruclu_phiTag (iConfig.getParameter<edm::InputTag>("ruclu_phiTag")),
   ruclu_energyTag (iConfig.getParameter<edm::InputTag>("ruclu_energyTag")),
@@ -212,6 +215,7 @@ flattener::flattener(const edm::ParameterSet& iConfig):
   hadronTag (iConfig.getParameter<edm::InputTag>("hadronInputTag")),
   moeTag (iConfig.getParameter<edm::InputTag>("moeInputTag")),
 
+  ruclu_imgToken (consumes<std::vector<std::string>>(ruclu_imgTag)),
   ruclu_etaToken (consumes<std::vector<float>>(ruclu_etaTag)),
   ruclu_phiToken (consumes<std::vector<float>>(ruclu_phiTag)),
   ruclu_energyToken (consumes<std::vector<float>>(ruclu_energyTag)),
@@ -276,7 +280,6 @@ flattener::flattener(const edm::ParameterSet& iConfig):
   tree->Branch("pvtx_z", &pvtx_z );
   tree->Branch("pvtx_chi2", &pvtx_chi2 );
   tree->Branch("pvtx_ndof", &pvtx_ndof );
-  tree->Branch("pvtx_size", &pvtx_size );
 
   tree->Branch("svtx_x", &svtx_x );
   tree->Branch("svtx_y", &svtx_y );
@@ -284,6 +287,7 @@ flattener::flattener(const edm::ParameterSet& iConfig):
   tree->Branch("svtx_chi2", &svtx_chi2 );
   tree->Branch("svtx_ndof", &svtx_ndof );
 
+  tree->Branch("ruclu_img", &ruclu_imgs );
   tree->Branch("ruclu_eta", &ruclu_etas );
   tree->Branch("ruclu_phi", &ruclu_phis );
   tree->Branch("ruclu_energy", &ruclu_energys );
@@ -297,7 +301,7 @@ flattener::flattener(const edm::ParameterSet& iConfig):
 
 }
 
-flattener::~flattener()
+flattenerImg::~flattenerImg()
 {
 }
 
@@ -305,7 +309,7 @@ flattener::~flattener()
 
 // ------------ method called to produce the data  ------------
 void
-flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
+flattenerImg::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
 {
   run = iEvent.eventAuxiliary().run();
   lumiSec = iEvent.eventAuxiliary().luminosityBlock();
@@ -403,7 +407,6 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
   //Primary Vertex
   Handle<vector<reco::Vertex>> pvtx;
   iEvent.getByToken(pvtxToken, pvtx);
-  pvtx_size.push_back(pvtx->size()); // @size?
   for (auto pvtx_iter = pvtx->begin(); pvtx_iter != pvtx->end(); ++pvtx_iter){
     pvtx_x.push_back(pvtx_iter->x());
     pvtx_y.push_back(pvtx_iter->y());
@@ -424,6 +427,7 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
   }
 
   //RUCLU
+  Handle<vector<std::string> > ru_imgs;
   Handle<vector<float> > ru_etas;
   Handle<vector<float> > ru_phis;
   Handle<vector<float> > ru_energys;
@@ -435,6 +439,7 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
   Handle<vector<float> > hadrons;
   Handle<vector<float> > moe;
 
+  iEvent.getByToken(ruclu_imgToken, ru_imgs);
   iEvent.getByToken(ruclu_etaToken, ru_etas);
   iEvent.getByToken(ruclu_phiToken, ru_phis);
   iEvent.getByToken(ruclu_energyToken, ru_energys);
@@ -446,8 +451,11 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
   iEvent.getByToken(hadronToken, hadrons);
   iEvent.getByToken(moeToken, moe);
 
+  std::cout << "STEVEN LOOK HERE: " << diphos.isValid() << std::endl;
+
   if(diphos.isValid() == 1){
     for (unsigned int i=0; i<ru_etas.product()->size(); ++i) {
+      ruclu_imgs.push_back(ru_imgs.product()->at(i));
       ruclu_etas.push_back(ru_etas.product()->at(i));
       ruclu_phis.push_back(ru_phis.product()->at(i));
       ruclu_energys.push_back(ru_energys.product()->at(i));
@@ -480,7 +488,7 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
 }
 
 void 
-flattener::clearVars(){
+flattenerImg::clearVars(){
 
   trigs.clear();
 
@@ -520,7 +528,6 @@ flattener::clearVars(){
   pvtx_z.clear();
   pvtx_chi2.clear();
   pvtx_ndof.clear();
-  pvtx_size.clear();
 
   svtx_x.clear();
   svtx_y.clear();
@@ -528,6 +535,7 @@ flattener::clearVars(){
   svtx_chi2.clear();
   svtx_ndof.clear();
 
+  ruclu_imgs.clear();
   ruclu_etas.clear();
   ruclu_phis.clear();
   ruclu_energys.clear();
@@ -541,30 +549,30 @@ flattener::clearVars(){
 }
 
 void
-flattener::beginJob()
+flattenerImg::beginJob()
 {
 }
 
 void
-flattener::endJob() {
+flattenerImg::endJob() {
 }
 
 void 
-flattener::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
+flattenerImg::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
 {
 }
 
 void 
-flattener::endRun(edm::Run const&, edm::EventSetup const&)
+flattenerImg::endRun(edm::Run const&, edm::EventSetup const&)
 {
 }
 
 void
-flattener::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+flattenerImg::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
   desc.setUnknown();
   descriptions.addWithDefaultLabel(desc);
 }
 
 //define this as a plug-in
-DEFINE_FWK_MODULE(flattener);
+DEFINE_FWK_MODULE(flattenerImg);

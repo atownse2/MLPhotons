@@ -1,9 +1,9 @@
 // -*- C++ -*-
 //
-// Package:    ML_Photons/flattener
-// Class:      flattener
+// Package:    ML_Photons/flattenerSignalMatch
+// Class:      flattenerSignalMatch
 // 
-/**\class flattener flattener.cc ML_Photons/flattener/plugins/flattener.cc
+/**\class flattenerSignalMatch flattenerSignalMatch.cc ML_Photons/flattenerSignalMatch/plugins/flattenerSignalMatch.cc
 
  Description: [one line class summary]
 
@@ -16,7 +16,7 @@
 //
 //
 
-#include "flattener.h"
+#include "flattenerSignalMatch.h"
 //
 
 #include "FWCore/Utilities/interface/InputTag.h"
@@ -25,10 +25,10 @@ using namespace edm;
 using namespace fastjet;
 using namespace fastjet::contrib;
 
-class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::one::WatchRuns> {
+class flattenerSignalMatch : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::one::WatchRuns> {
    public:
-      explicit flattener( const edm::ParameterSet& );
-      ~flattener() override;
+      explicit flattenerSignalMatch( const edm::ParameterSet& );
+      ~flattenerSignalMatch() override;
 
       static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
@@ -45,6 +45,10 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
       // ----------member data ---------------------------
       const edm::InputTag triggerResultsTag;
       const edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken;
+
+      //Gen Particles
+      const edm::InputTag genpartTag;
+      const edm::EDGetTokenT<vector<reco::GenParticle>> genpartToken;
 
       //Jets
       const edm::InputTag patjetTag;
@@ -110,6 +114,8 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
       int lumiSec;
       double wgt;
 
+      int isDirectPrompt;
+
       std::vector<int> trigs;
 
       std::vector<float> jet_pt;
@@ -124,6 +130,20 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
       std::vector<float> met_phi;
       std::vector<float> met_energy;
       std::vector<float> met_mass;
+
+      //Gen a
+      std::vector<float> a_pt;
+      std::vector<float> a_eta;
+      std::vector<float> a_phi;
+      std::vector<float> a_energy;
+      std::vector<float> a_mass;
+
+      //Gen Photons
+      std::vector<float> genpho_pt;
+      std::vector<float> genpho_eta;
+      std::vector<float> genpho_phi;
+      std::vector<float> genpho_energy;
+      std::vector<float> genpho_mass;
 
       std::vector<float> muon_pt;
       std::vector<float> muon_eta;
@@ -142,13 +162,13 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
       std::vector<float> patpho_phi;
       std::vector<float> patpho_energy;
       std::vector<float> patpho_mass;
+      std::vector<float> patpho_wp90;
 
       std::vector<float> pvtx_x;
       std::vector<float> pvtx_y;
       std::vector<float> pvtx_z;
       std::vector<float> pvtx_chi2;
       std::vector<float> pvtx_ndof;
-      std::vector<int> pvtx_size;
 
       std::vector<float> svtx_x;
       std::vector<float> svtx_y;
@@ -169,9 +189,12 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
 
   };
 
-flattener::flattener(const edm::ParameterSet& iConfig):
+flattenerSignalMatch::flattenerSignalMatch(const edm::ParameterSet& iConfig):
   triggerResultsTag (iConfig.getParameter<edm::InputTag>("TriggerInputTag_HLT")),
   triggerResultsToken (consumes<edm::TriggerResults>(triggerResultsTag)),
+
+  genpartTag (iConfig.getParameter<edm::InputTag>("genpartInputTag")),
+  genpartToken (consumes<vector<reco::GenParticle>>(genpartTag)),
 
   patjetTag (iConfig.getParameter<edm::InputTag>("patjetInputTag")),
   patjetToken (consumes<vector<pat::Jet>>(patjetTag)),
@@ -223,6 +246,7 @@ flattener::flattener(const edm::ParameterSet& iConfig):
   hadronToken (consumes<std::vector<float>>(hadronTag)),
   moeToken (consumes<std::vector<float>>(moeTag)),
 
+
   wgt (iConfig.getParameter<double>("weightInput"))
 
 {
@@ -235,6 +259,8 @@ flattener::flattener(const edm::ParameterSet& iConfig):
   tree->Branch("lumiSec", &lumiSec, "lumiSec/i");
   tree->Branch("run", &run, "run/i");
   tree->Branch("id", &id, "id/i");
+
+  tree->Branch("isDirectPrompt", &isDirectPrompt, "isDirectPrompt/i");
 
   tree->Branch("wgt", &wgt );
 
@@ -253,6 +279,20 @@ flattener::flattener(const edm::ParameterSet& iConfig):
   tree->Branch("met_energy", &met_energy );
   tree->Branch("met_mass", &met_mass );
 
+  //Generator-level as
+  tree->Branch("a_pt", &a_pt );
+  tree->Branch("a_eta", &a_eta );
+  tree->Branch("a_phi", &a_phi );
+  tree->Branch("a_energy", &a_energy );
+  tree->Branch("a_mass", &a_mass );
+
+  //Generator-level photons
+  tree->Branch("genpho_pt", &genpho_pt );
+  tree->Branch("genpho_eta", &genpho_eta );
+  tree->Branch("genpho_phi", &genpho_phi );
+  tree->Branch("genpho_energy", &genpho_energy );
+  tree->Branch("genpho_mass", &genpho_mass );
+
   tree->Branch("muon_pt", &muon_pt );
   tree->Branch("muon_eta", &muon_eta );
   tree->Branch("muon_phi", &muon_phi );
@@ -270,13 +310,13 @@ flattener::flattener(const edm::ParameterSet& iConfig):
   tree->Branch("patpho_phi", &patpho_phi );
   tree->Branch("patpho_energy", &patpho_energy );
   tree->Branch("patpho_mass", &patpho_mass );
+  tree->Branch("patpho_wp90", &patpho_wp90);
 
   tree->Branch("pvtx_x", &pvtx_x );
   tree->Branch("pvtx_y", &pvtx_y );
   tree->Branch("pvtx_z", &pvtx_z );
   tree->Branch("pvtx_chi2", &pvtx_chi2 );
   tree->Branch("pvtx_ndof", &pvtx_ndof );
-  tree->Branch("pvtx_size", &pvtx_size );
 
   tree->Branch("svtx_x", &svtx_x );
   tree->Branch("svtx_y", &svtx_y );
@@ -297,7 +337,7 @@ flattener::flattener(const edm::ParameterSet& iConfig):
 
 }
 
-flattener::~flattener()
+flattenerSignalMatch::~flattenerSignalMatch()
 {
 }
 
@@ -305,7 +345,7 @@ flattener::~flattener()
 
 // ------------ method called to produce the data  ------------
 void
-flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
+flattenerSignalMatch::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
 {
   run = iEvent.eventAuxiliary().run();
   lumiSec = iEvent.eventAuxiliary().luminosityBlock();
@@ -343,10 +383,11 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
       }
     }
   }
+  
 
   //Jets
   Handle<vector<pat::Jet>> patJet;
-  iEvent.getByToken(patjetToken, patJet); 
+  iEvent.getByToken(patjetToken, patJet); // Get this event's trigger info
   for (auto jet_iter = patJet->begin(); jet_iter != patJet->end(); ++jet_iter){
     jet_pt.push_back(jet_iter->pt());
     jet_eta.push_back(jet_iter->eta());
@@ -358,7 +399,7 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
 
   //METs
   Handle<vector<pat::MET>> met;
-  iEvent.getByToken(metToken, met); 
+  iEvent.getByToken(metToken, met); // Get this event's trigger info
   for (auto met_iter = met->begin(); met_iter != met->end(); ++met_iter){
     met_pt.push_back(met_iter->pt());
     met_eta.push_back(met_iter->eta());
@@ -366,10 +407,38 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
     met_energy.push_back(met_iter->energy());
     met_mass.push_back(met_iter->mass());
   }
+    
+  //Loop through gen particles
+  Handle<vector<reco::GenParticle>> genpart;
+  iEvent.getByToken(genpartToken, genpart);
+  for (auto gp_iter = genpart->begin(); gp_iter != genpart->end(); ++gp_iter){
+    if (gp_iter->pdgId() == 90000054 && gp_iter->numberOfDaughters()==2){
+      if( gp_iter->daughter(0)->pdgId() == 22 && gp_iter->daughter(1)->pdgId() == 22 ){
+        a_pt.push_back(gp_iter->pt());
+        a_eta.push_back(gp_iter->eta());
+        a_phi.push_back(gp_iter->phi());
+        a_energy.push_back(gp_iter->energy());
+        a_mass.push_back(gp_iter->mass());
+
+        genpho_pt.push_back(gp_iter->daughter(0)->pt());
+        genpho_eta.push_back(gp_iter->daughter(0)->eta());
+        genpho_phi.push_back(gp_iter->daughter(0)->phi());
+        genpho_energy.push_back(gp_iter->daughter(0)->energy());
+        genpho_mass.push_back(gp_iter->daughter(0)->mass());
+
+        genpho_pt.push_back(gp_iter->daughter(1)->pt());
+        genpho_eta.push_back(gp_iter->daughter(1)->eta());
+        genpho_phi.push_back(gp_iter->daughter(1)->phi());
+        genpho_energy.push_back(gp_iter->daughter(1)->energy());
+        genpho_mass.push_back(gp_iter->daughter(1)->mass());
+
+        }
+      }
+    } //genpart loop
   
   //Muons
   Handle<vector<pat::Muon>> muon;
-  iEvent.getByToken(muonToken, muon);
+  iEvent.getByToken(muonToken, muon); // Get this event's trigger info
   for (auto muon_iter = muon->begin(); muon_iter != muon->end(); ++muon_iter){
     muon_pt.push_back(muon_iter->pt());
     muon_eta.push_back(muon_iter->eta());
@@ -380,30 +449,31 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
 
   //Electrons
   Handle<vector<pat::Electron>> electron;
-  iEvent.getByToken(electronToken, electron); 
+  iEvent.getByToken(electronToken, electron); // Get this event's trigger info
   for (auto electron_iter = electron->begin(); electron_iter != electron->end(); ++electron_iter){
-    electron_pt.push_back(electron_iter->pt());
-    electron_eta.push_back(electron_iter->eta());
-    electron_phi.push_back(electron_iter->phi());
-    electron_energy.push_back(electron_iter->energy());
-    electron_mass.push_back(electron_iter->mass());
-  }
-
+     electron_pt.push_back(electron_iter->pt());
+     electron_eta.push_back(electron_iter->eta());
+     electron_phi.push_back(electron_iter->phi());
+     electron_energy.push_back(electron_iter->energy());
+     electron_mass.push_back(electron_iter->mass());
+   }
+  
   //PAT Photons
   Handle<vector<pat::Photon>> patpho;
-  iEvent.getByToken(patPhoToken, patpho); 
+  iEvent.getByToken(patPhoToken, patpho); // Get this event's trigger info
   for (auto patpho_iter = patpho->begin(); patpho_iter != patpho->end(); ++patpho_iter){
-    patpho_pt.push_back(patpho_iter->pt());
-    patpho_eta.push_back(patpho_iter->eta());
-    patpho_phi.push_back(patpho_iter->phi());
-    patpho_energy.push_back(patpho_iter->energy());
-    patpho_mass.push_back(patpho_iter->mass());
-  }
+     patpho_pt.push_back(patpho_iter->pt());
+     patpho_eta.push_back(patpho_iter->eta());
+     patpho_phi.push_back(patpho_iter->phi());
+     patpho_energy.push_back(patpho_iter->energy());
+     patpho_mass.push_back(patpho_iter->mass());
+     //patpho_wp90.push_back(patpho_iter->userFloat("PhotonMVAEstimatorRunIIFall17v1Values"));
+     patpho_wp90.push_back(patpho_iter->photonID("mvaPhoID-RunIIFall17-v1-wp90")); //https://twiki.cern.ch/twiki/bin/view/CMS/EgammaMiniAODV2
+   }
 
   //Primary Vertex
   Handle<vector<reco::Vertex>> pvtx;
-  iEvent.getByToken(pvtxToken, pvtx);
-  pvtx_size.push_back(pvtx->size()); // @size?
+  iEvent.getByToken(pvtxToken, pvtx); // Get this event's trigger info
   for (auto pvtx_iter = pvtx->begin(); pvtx_iter != pvtx->end(); ++pvtx_iter){
     pvtx_x.push_back(pvtx_iter->x());
     pvtx_y.push_back(pvtx_iter->y());
@@ -414,7 +484,7 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
 
   //Secondary Vertex
   Handle<vector<reco::VertexCompositePtrCandidate>> svtx;
-  iEvent.getByToken(svtxToken, svtx);
+  iEvent.getByToken(svtxToken, svtx); // Get this event's trigger info
   for (auto svtx_iter = svtx->begin(); svtx_iter != svtx->end(); ++svtx_iter){
     svtx_x.push_back(svtx_iter->vx());
     svtx_y.push_back(svtx_iter->vy());
@@ -460,19 +530,6 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
       moes.push_back(moe.product()->at(i));
     }
   }
-  //else{
-  //  ruclu_etas.push_back(-999.);
-  //  ruclu_phis.push_back(-999.);
-  //  ruclu_energys.push_back(-999.);
-  //  ruclu_r1s.push_back(-999.);
-  //  ruclu_r2s.push_back(-999.);
-  //  ruclu_r3s.push_back(-999.);
-  //  dipho_scores.push_back(-999.);
-  //  dipho_scores.push_back(-999.);
-  //  monopho_scores.push_back(-999.);
-  //  hadron_scores.push_back(-999.);
-  //  moes.push_back(-999.);
-  //}
 
   tree->Fill();
   clearVars();
@@ -480,7 +537,7 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
 }
 
 void 
-flattener::clearVars(){
+flattenerSignalMatch::clearVars(){
 
   trigs.clear();
 
@@ -496,6 +553,18 @@ flattener::clearVars(){
   met_phi.clear();
   met_energy.clear();
   met_mass.clear();
+
+  a_pt.clear();
+  a_eta.clear();
+  a_phi.clear();
+  a_energy.clear();
+  a_mass.clear();
+
+  genpho_pt.clear();
+  genpho_eta.clear();
+  genpho_phi.clear();
+  genpho_energy.clear();
+  genpho_mass.clear();
 
   muon_pt.clear();
   muon_eta.clear();
@@ -514,13 +583,13 @@ flattener::clearVars(){
   patpho_phi.clear();
   patpho_energy.clear();
   patpho_mass.clear();
+  patpho_wp90.clear();
 
   pvtx_x.clear();
   pvtx_y.clear();
   pvtx_z.clear();
   pvtx_chi2.clear();
   pvtx_ndof.clear();
-  pvtx_size.clear();
 
   svtx_x.clear();
   svtx_y.clear();
@@ -541,30 +610,30 @@ flattener::clearVars(){
 }
 
 void
-flattener::beginJob()
+flattenerSignalMatch::beginJob()
 {
 }
 
 void
-flattener::endJob() {
+flattenerSignalMatch::endJob() {
 }
 
 void 
-flattener::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
+flattenerSignalMatch::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
 {
 }
 
 void 
-flattener::endRun(edm::Run const&, edm::EventSetup const&)
+flattenerSignalMatch::endRun(edm::Run const&, edm::EventSetup const&)
 {
 }
 
 void
-flattener::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+flattenerSignalMatch::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
   desc.setUnknown();
   descriptions.addWithDefaultLabel(desc);
 }
 
 //define this as a plug-in
-DEFINE_FWK_MODULE(flattener);
+DEFINE_FWK_MODULE(flattenerSignalMatch);
