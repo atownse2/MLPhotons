@@ -196,10 +196,10 @@ ml_photons::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     regress_data_.emplace_back(eta_v);
 
     //Perform the Classification
-    class_outputs = ort_class.run(class_input_names, img, class_output_names, 1)[0];
+    class_outputs = ort_class.run(class_input_names, img, {}, class_output_names, 1)[0];
 
     //Perform the Regression
-    regress_outputs = ort_regress.run(regress_input_names, regress_data_, regress_output_names, 1)[0];
+    regress_outputs = ort_regress.run(regress_input_names, regress_data_, {}, regress_output_names, 1)[0];
 
     //Compute softmax of Classifier output
     float denom = 0.0;
