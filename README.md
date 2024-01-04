@@ -7,8 +7,8 @@ Also includes scripts for producing flat trees with some objects relevant to an 
 To deploy:
 
 ```
-cmsrel CMSSW_10_6_14
-cd CMSSW_10_6_14/src
+cmsrel CMSSW_10_6_19_patch2
+cd CMSSW_10_6_19_patch2/src
 cmsenv
 git clone https://github.com/atownse2/MLPhotons.git
 scram b
