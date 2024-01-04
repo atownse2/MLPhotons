@@ -16,6 +16,6 @@ scram b
 
 You can run a test job by doing:
 ```
-cd MLPhotons/python
+cd MLPhotons/MLPhotons/python
 cmsRun Prod_FlatAOD.py inputFiles=file:/scratch365/atownse2/tmp/test_MiniAOD.root outputFile=test.root maxEvents=10 isMC=True
 ```
