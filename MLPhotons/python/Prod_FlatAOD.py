@@ -58,8 +58,8 @@ process.TFileService = cms.Service("TFileService",
 
 process.mlphotons = cms.EDProducer(
 				'ml_photons',
-        classifier_path = cms.string(CMSSW_BASE + "/src/MLPhotons/MLPhotons/classifier.onnx"),
-        regressor_path = cms.string(CMSSW_BASE + "/src/MLPhotons/MLPhotons/regressor.onnx"),
+        classifier_path = cms.string(CMSSW_BASE + "/src/MLPhotons/MLPhotons/plugins/classifier.onnx"),
+        regressor_path = cms.string(CMSSW_BASE + "/src/MLPhotons/MLPhotons/plugins/regressor.onnx"),
 				PhoInputTag = cms.InputTag('slimmedPhotons', '', 'PAT'),
 				CluInputTag = cms.InputTag('reducedEgamma', 'reducedEBEEClusters', 'PAT'),
 				HEEInputTag = cms.InputTag('reducedEgamma', 'reducedEERecHits', 'PAT'),
