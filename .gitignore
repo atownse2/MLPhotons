@@ -1,0 +1,16 @@
+*.pyc
+*.csv
+*init*
+*.swp
+*.root
+.DS_Store
+/ml_photons/python/output/
+/ml_photons/python/condor_logfiles/
+/ml_photons/python/maked.sh
+/ml_photons/python/Call*
+/ml_photons/python/Run*
+/ml_photons/python/RUN*
+/ml_photons/python/*invert*
+/ml_photons/python/Prod_ml_photons_qcd.py
+/ml_photons/python/Clusterizer/
+/ml_photons/python/test/
