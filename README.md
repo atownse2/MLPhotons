@@ -1,11 +1,22 @@
 ## Analysis Code for Clustering, Classifying and Regressing Diphoton Events
 Runs over MiniAOD, creates clusters based on hits in ECal. Then applies classification NN to classify clusters as monophoton, diphoton, or hadronic, and then predicts the mass of the clusters.
 
-To run: 
-move this directory into CMSSW_10_6_14/src or later.    
-cd ml_photons/python   
-cmsenv  
-./build.sh  
-./run.sh  
+Also includes scripts for producing flat trees with some objects relevant to an EGamma analysis.
 
-Owner: Steven Clark, s.clark@rutgers.edu
+To deploy:
+
+```
+cmsrel CMSSW_10_6_14
+cd CMSSW_10_6_14/src
+cmsenv
+mkdir MLPhotons
+cd MLPhotons
+git clone https://github.com/atownse2/MLPhotons.git
+scram b
+```
+
+You can run a test job by doing:
+```
+cd MLPhotons/python
+cmsRun Prod_FlatAOD.py --inputFiles /scratch365/atownse2/tmp/test_MiniAOD.root --outputFile test.root --maxEvents 10 --isMC True
+```
