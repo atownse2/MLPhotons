@@ -10,8 +10,6 @@ To deploy:
 cmsrel CMSSW_10_6_14
 cd CMSSW_10_6_14/src
 cmsenv
-mkdir MLPhotons
-cd MLPhotons
 git clone https://github.com/atownse2/MLPhotons.git
 scram b
 ```
