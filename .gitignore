@@ -3,6 +3,7 @@
 *init*
 *.swp
 *.root
+.DS_Store
 /ml_photons/python/output/
 /ml_photons/python/condor_logfiles/
 /ml_photons/python/maked.sh
