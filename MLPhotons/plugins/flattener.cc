@@ -22,8 +22,8 @@
 #include "FWCore/Utilities/interface/InputTag.h"
 
 using namespace edm;
-using namespace fastjet;
-using namespace fastjet::contrib;
+// using namespace fastjet;
+// using namespace fastjet::contrib;
 
 class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::one::WatchRuns> {
    public:

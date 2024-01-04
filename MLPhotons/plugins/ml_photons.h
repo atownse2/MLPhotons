@@ -27,7 +27,7 @@
 #include "DataFormats/Math/interface/deltaR.h"
 #include "DataFormats/JetReco/interface/Jet.h"
 #include "DataFormats/CaloTowers/interface/CaloTowerCollection.h"
-#include "DataFormats/BTauReco/interface/JetTag.h"
+// #include "DataFormats/BTauReco/interface/JetTag.h"
 
 #include "TLorentzVector.h"
 #include "TVector3.h"
@@ -35,12 +35,12 @@
 #include "TH2.h"
 #include "TCanvas.h"
 
-#include "fastjet/JetDefinition.hh"
-#include "fastjet/PseudoJet.hh"
-#include "fastjet/tools/Filter.hh"
-#include "fastjet/ClusterSequence.hh"
-#include "fastjet/ClusterSequenceArea.hh"
-#include "fastjet/contrib/Nsubjettiness.hh"
+// #include "fastjet/JetDefinition.hh"
+// #include "fastjet/PseudoJet.hh"
+// #include "fastjet/tools/Filter.hh"
+// #include "fastjet/ClusterSequence.hh"
+// #include "fastjet/ClusterSequenceArea.hh"
+// #include "fastjet/contrib/Nsubjettiness.hh"
 
 #include "Geometry/EcalAlgo/interface/EcalBarrelGeometry.h"
 #include "Geometry/EcalAlgo/interface/EcalEndcapGeometry.h"

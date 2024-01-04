@@ -23,8 +23,8 @@
 
 using namespace cms::Ort;
 using namespace edm;
-using namespace fastjet;
-using namespace fastjet::contrib;
+// using namespace fastjet;
+// using namespace fastjet::contrib;
 
 class ml_photons : public edm::stream::EDProducer<> {
    public:
