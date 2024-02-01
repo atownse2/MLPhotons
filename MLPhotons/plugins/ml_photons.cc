@@ -41,21 +41,36 @@ class ml_photons : public edm::stream::EDProducer<> {
 
       // ----------member data ---------------------------
       const double MATCH_DR = 0.15; //Cluster Size
+
+      // 
       EDGetTokenT<std::vector<reco::CaloCluster>> token_clusters;
       EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >> token_HEE;
       EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >> token_HEB;
+
+      // ML
       ONNXRuntime ort_class;
       ONNXRuntime ort_regress;
+      
+      //PF Candidates
+      const edm::InputTag pfcandTag;
+      const edm::EDGetTokenT<std::vector<pat::PackedCandidate>> pfcandToken;
+      
       std::string cname_;
 
   };
 
 ml_photons::ml_photons(const edm::ParameterSet& iConfig):
+
   token_clusters(consumes<std::vector<reco::CaloCluster>>(iConfig.getParameter<edm::InputTag>("CluInputTag"))),
   token_HEE(consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >>(iConfig.getParameter<edm::InputTag>("HEEInputTag"))),
   token_HEB(consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >>(iConfig.getParameter<edm::InputTag>("HEBInputTag"))),
+
   ort_class(iConfig.getParameter<std::string>("classifier_path")),
   ort_regress(iConfig.getParameter<std::string>("regressor_path")),
+
+  pfcandTag (iConfig.getParameter<edm::InputTag>("pfcandInputTag")),
+  pfcandToken (consumes<std::vector<pat::PackedCandidate>>(pfcandTag)),
+
   cname_(iConfig.getParameter<std::string>("cluster_name"))
 {
 
@@ -69,6 +84,7 @@ ml_photons::ml_photons(const edm::ParameterSet& iConfig):
   produces<std::vector<float>> (cname_+"R1");
   produces<std::vector<float>> (cname_+"R2");
   produces<std::vector<float>> (cname_+"R3");
+  produces<std::vector<float>> (cname_+"PFIso");
 
 }
 
@@ -95,6 +111,9 @@ ml_photons::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.getByToken(token_clusters, CLS_pho);
   Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >> HEB;
   iEvent.getByToken(token_HEB, HEB);
+
+  Handle<std::vector<pat::PackedCandidate>> pfcand;
+  iEvent.getByToken(pfcandToken, pfcand);
 
 ////////////////////////////////////////////////////////
   //BEGIN WITH CLUSTERING
@@ -154,6 +173,7 @@ ml_photons::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   std::unique_ptr<std::vector<float>> cluster_r1_( new std::vector<float> );
   std::unique_ptr<std::vector<float>> cluster_r2_( new std::vector<float> );
   std::unique_ptr<std::vector<float>> cluster_r3_( new std::vector<float> );
+  std::unique_ptr<std::vector<float>> cluster_pfi_( new std::vector<float> );
 
   //Setting up data types for onnx runtime
   static const int isize = 30;
@@ -207,9 +227,12 @@ ml_photons::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       denom += exp(class_outputs.at(ii));
     }
 
+    //Fill the outputs
+    float cluster_Energy = C.getTotalE();
+
     cluster_Eta_->emplace_back( C.vec.Eta() );
     cluster_Phi_->emplace_back( C.vec.Phi() );
-    cluster_E_->emplace_back( C.getTotalE() );
+    cluster_E_->emplace_back( cluster_Energy );
 
     cluster_r1_->emplace_back( C.compute_En( 1. ) /  C.compute_En( 0. ));
     cluster_r2_->emplace_back( C.compute_En( 2. ) /  C.compute_En( 0. ));
@@ -220,6 +243,19 @@ ml_photons::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     cluster_mono_->emplace_back(exp( class_outputs.at(0) ) / denom);
     cluster_di_->emplace_back(exp( class_outputs.at(1) ) / denom);
     cluster_had_->emplace_back(exp( class_outputs.at(2) ) / denom);
+
+
+    // Calculate PF Isolation
+    float pfCandE = 0;
+    for (auto pfcand_iter = pfcand->begin(); pfcand_iter != pfcand->end(); ++pfcand_iter){
+      float dR = reco::deltaR(pfcand_iter->eta(), pfcand_iter->phi(), C.vec.Eta(), C.vec.Phi());
+      if (dR < 0.3){
+        pfCandE += pfcand_iter->energy();
+      }
+    }
+    if (pfCandE < cluster_Energy) pfCandE = cluster_Energy;
+    cluster_pfi_->emplace_back(cluster_Energy/pfCandE);
+
   }
 
   iEvent.put(std::move(cluster_Eta_), cname_+"Eta");
@@ -232,6 +268,7 @@ ml_photons::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.put(std::move(cluster_r1_), cname_+"R1");
   iEvent.put(std::move(cluster_r2_), cname_+"R2");
   iEvent.put(std::move(cluster_r3_), cname_+"R3");
+  iEvent.put(std::move(cluster_pfi_), cname_+"PFIso");
 
 }
 

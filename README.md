@@ -17,5 +17,10 @@ scram b
 You can run a test job by doing:
 ```
 cd MLPhotons/MLPhotons/python
-cmsRun Prod_FlatAOD.py inputFiles=file:/scratch365/atownse2/tmp/test_MiniAOD.root outputFile=test.root maxEvents=10 isMC=True
+cmsRun Prod_FlatAOD.py inputFiles=...
+```
+
+If you want to only run the clustering and classification without the flattening you can do:
+```
+cmsRun MLPhotons/MLPhotons/python/Prod_MLPhotons.py inputFiles=...
 ```

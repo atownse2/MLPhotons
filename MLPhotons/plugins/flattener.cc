@@ -54,10 +54,6 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
       const edm::InputTag patjetTag;
       const edm::EDGetTokenT<vector<pat::Jet>> patjetToken;
 
-      //PF Candidates
-      const edm::InputTag pfcandTag;
-      const edm::EDGetTokenT<vector<pat::PackedCandidate>> pfcandToken;
-
       //METs
       const edm::InputTag metTag;
       const edm::EDGetTokenT<vector<pat::MET>> metToken;
@@ -95,6 +91,7 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
       const edm::InputTag ruclu_r1Tag;
       const edm::InputTag ruclu_r2Tag;
       const edm::InputTag ruclu_r3Tag;
+      const edm::InputTag ruclu_pfIsoTag;
       const edm::InputTag monophoTag;
       const edm::InputTag diphoTag;
       const edm::InputTag hadronTag;
@@ -106,6 +103,7 @@ class flattener : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::on
       const edm::EDGetTokenT<std::vector<float>> ruclu_r1Token;
       const edm::EDGetTokenT<std::vector<float>> ruclu_r2Token;
       const edm::EDGetTokenT<std::vector<float>> ruclu_r3Token;
+      const edm::EDGetTokenT<std::vector<float>> ruclu_pfIsoToken;
       const edm::EDGetTokenT<std::vector<float>> monophoToken;
       const edm::EDGetTokenT<std::vector<float>> diphoToken; //dcom
       const edm::EDGetTokenT<std::vector<float>> hadronToken;
@@ -210,9 +208,6 @@ flattener::flattener(const edm::ParameterSet& iConfig):
   patjetTag (iConfig.getParameter<edm::InputTag>("patjetInputTag")),
   patjetToken (consumes<vector<pat::Jet>>(patjetTag)),
 
-  pfcandTag (iConfig.getParameter<edm::InputTag>("pfcandInputTag")),
-  pfcandToken (consumes<vector<pat::PackedCandidate>>(pfcandTag)),
-
   metTag (iConfig.getParameter<edm::InputTag>("metInputTag")),
   metToken (consumes<vector<pat::MET>>(metTag)),
 
@@ -244,6 +239,7 @@ flattener::flattener(const edm::ParameterSet& iConfig):
   ruclu_r1Tag (iConfig.getParameter<edm::InputTag>("ruclu_r1Tag")),
   ruclu_r2Tag (iConfig.getParameter<edm::InputTag>("ruclu_r2Tag")),
   ruclu_r3Tag (iConfig.getParameter<edm::InputTag>("ruclu_r3Tag")),
+  ruclu_pfIsoTag (iConfig.getParameter<edm::InputTag>("ruclu_pfIsoTag")),
   monophoTag (iConfig.getParameter<edm::InputTag>("monophoInputTag")),
   diphoTag (iConfig.getParameter<edm::InputTag>("diphoInputTag")), //dcom
   hadronTag (iConfig.getParameter<edm::InputTag>("hadronInputTag")),
@@ -255,6 +251,7 @@ flattener::flattener(const edm::ParameterSet& iConfig):
   ruclu_r1Token (consumes<std::vector<float>>(ruclu_r1Tag)),
   ruclu_r2Token (consumes<std::vector<float>>(ruclu_r2Tag)),
   ruclu_r3Token (consumes<std::vector<float>>(ruclu_r3Tag)),
+  ruclu_pfIsoToken (consumes<std::vector<float>>(ruclu_pfIsoTag)),
   monophoToken (consumes<std::vector<float>>(monophoTag)),
   diphoToken (consumes<std::vector<float>>(diphoTag)), //dcom
   hadronToken (consumes<std::vector<float>>(hadronTag)),
@@ -355,9 +352,6 @@ flattener::flattener(const edm::ParameterSet& iConfig):
   tree->Branch("ruclu_monopho", &ruclu_monopho );
   tree->Branch("ruclu_hadron", &ruclu_hadron );
   tree->Branch("ruclu_moe", &ruclu_moe );
-  tree->Branch("ruclu_isPhoton", &ruclu_isPhoton );
-  tree->Branch("ruclu_hasPixelSeed", &ruclu_hasPixelSeed );
-  tree->Branch("ruclu_passElectronVeto", &ruclu_passElectronVeto );
 
 }
 
@@ -536,6 +530,7 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
   Handle<vector<float> > ru_r1s;
   Handle<vector<float> > ru_r2s;
   Handle<vector<float> > ru_r3s;
+  Handle<vector<float> > ru_pfIsos;
   Handle<vector<float> > monophos;
   Handle<vector<float> > diphos; // dcom
   Handle<vector<float> > hadrons;
@@ -547,13 +542,11 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
   iEvent.getByToken(ruclu_r1Token, ru_r1s);
   iEvent.getByToken(ruclu_r2Token, ru_r2s);
   iEvent.getByToken(ruclu_r3Token, ru_r3s);
+  iEvent.getByToken(ruclu_pfIsoToken, ru_pfIsos);
   iEvent.getByToken(monophoToken, monophos);
   iEvent.getByToken(diphoToken, diphos); // dcom
   iEvent.getByToken(hadronToken, hadrons);
   iEvent.getByToken(moeToken, moe);
-
-  Handle<vector<pat::PackedCandidate>> pfcand;
-  iEvent.getByToken(pfcandToken, pfcand);
 
   if(diphos.isValid() == 1){
     for (unsigned int i=0; i<ru_etas.product()->size(); ++i) {
@@ -563,46 +556,11 @@ flattener::analyze( const edm::Event & iEvent, const edm::EventSetup & iSetup)
       ruclu_r1.push_back(ru_r1s.product()->at(i));
       ruclu_r2.push_back(ru_r2s.product()->at(i));
       ruclu_r3.push_back(ru_r3s.product()->at(i));
+      ruclu_pfIso.push_back(ru_pfIsos.product()->at(i));
       ruclu_dipho.push_back(diphos.product()->at(i)); // dcom
       ruclu_monopho.push_back(monophos.product()->at(i));
       ruclu_hadron.push_back(hadrons.product()->at(i));
       ruclu_moe.push_back(moe.product()->at(i));
-
-      // Calculate pfIso
-      float pfCandE = 0;
-      for (auto pfcand_iter = pfcand->begin(); pfcand_iter != pfcand->end(); ++pfcand_iter){
-
-        // Calculate dR
-        float pi = 3.14159265358979323846;
-        float dPhi = pfcand_iter->phi() - ru_phis.product()->at(i);
-        if (dPhi > pi) dPhi -= 2*pi;
-        if (dPhi <= -pi) dPhi += 2*pi;
-
-        float dR = sqrt(pow(pfcand_iter->eta() - ru_etas.product()->at(i), 2) + pow(dPhi, 2));
-        if (dR < 0.3){
-          pfCandE += pfcand_iter->energy();
-        }
-      }
-      if (pfCandE == 0) pfCandE = 1;
-      ruclu_pfIso.push_back(ru_energys.product()->at(i) / pfCandE);
-
-      // Calculate isPhoton
-      bool isPhoton = false;
-      for (auto patpho_iter = patpho->begin(); patpho_iter != patpho->end(); ++patpho_iter){
-        float dR = sqrt(pow(patpho_iter->eta() - ru_etas.product()->at(i), 2) + pow(patpho_iter->phi() - ru_phis.product()->at(i), 2));
-        if (dR < 0.15){
-          isPhoton = true;
-          ruclu_isPhoton.push_back(true);
-          ruclu_hasPixelSeed.push_back(patpho_iter->hasPixelSeed());
-          ruclu_passElectronVeto.push_back(patpho_iter->passElectronVeto());
-          break;
-        }
-      }
-      if (!isPhoton){
-        ruclu_isPhoton.push_back(false);
-        ruclu_hasPixelSeed.push_back(false);
-        ruclu_passElectronVeto.push_back(false);
-      }
 
     }
   }
@@ -704,9 +662,6 @@ flattener::clearVars(){
   ruclu_monopho.clear();
   ruclu_hadron.clear();
   ruclu_moe.clear();
-  ruclu_isPhoton.clear();
-  ruclu_hasPixelSeed.clear();
-  ruclu_passElectronVeto.clear();
 }
 
 void

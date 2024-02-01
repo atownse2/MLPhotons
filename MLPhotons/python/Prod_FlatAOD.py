@@ -30,11 +30,8 @@ maxEvents = options.maxEvents
 isMC = options.isMC
 year = options.year
 
-if year != '2018':
-    raise ValueError('Only 2018 data is supported at this time')
-
 # Store all trigger names in a text file, not sure if this is the best way to do this
-triggers = '/afs/crc.nd.edu/user/a/atownse2/Public/RSTriPhoton/analysis/metadata/triggers/triggerNames_{}.txt'.format(year)
+triggers = '{}/src/MLPhotons/MLPhotons/plugins/triggerNames_{}.txt'.format(CMSSW_BASE, year)
 
 if not os.path.isfile(triggers):
     print("Trigger file does not exist: {}".format(triggers))
@@ -57,19 +54,17 @@ process.TFileService = cms.Service("TFileService",
       )
 
 process.mlphotons = cms.EDProducer(
-				'ml_photons',
-        classifier_path = cms.string(CMSSW_BASE + "/src/MLPhotons/MLPhotons/plugins/classifier.onnx"),
-        regressor_path = cms.string(CMSSW_BASE + "/src/MLPhotons/MLPhotons/plugins/regressor.onnx"),
-				PhoInputTag = cms.InputTag('slimmedPhotons', '', 'PAT'),
-				CluInputTag = cms.InputTag('reducedEgamma', 'reducedEBEEClusters', 'PAT'),
-				HEEInputTag = cms.InputTag('reducedEgamma', 'reducedEERecHits', 'PAT'),
-				HEBInputTag = cms.InputTag('reducedEgamma', 'reducedEBRecHits', 'PAT'),
-        genpartInputTag = cms.InputTag('prunedGenParticles', '', 'PAT'),
-				RHInputTag = cms.InputTag('reducedEgamma', 'reducedEBRecHits', 'PAT'),
-        TriggerInputTag_HLT = cms.InputTag('TriggerResults', '', "HLT"),
-        VtxInputTag = cms.InputTag('offlineSlimmedPrimaryVertices', '', 'PAT'),
-        cluster_name = cms.string("RUCLUs"),
-			)
+    'ml_photons',
+    classifier_path = cms.string(CMSSW_BASE + "/src/MLPhotons/MLPhotons/plugins/classifier.onnx"),
+    regressor_path = cms.string(CMSSW_BASE + "/src/MLPhotons/MLPhotons/plugins/regressor.onnx"),
+    CluInputTag = cms.InputTag('reducedEgamma', 'reducedEBEEClusters', 'PAT'),
+    HEEInputTag = cms.InputTag('reducedEgamma', 'reducedEERecHits', 'PAT'),
+    HEBInputTag = cms.InputTag('reducedEgamma', 'reducedEBRecHits', 'PAT'),
+    pfcandInputTag = cms.InputTag('packedPFCandidates', '', 'PAT'),
+    cluster_name = cms.string("RUCLUs"),
+    # PhoInputTag = cms.InputTag('slimmedPhotons', '', 'PAT'),
+    # VtxInputTag = cms.InputTag('offlineSlimmedPrimaryVertices', '', 'PAT'),
+)
 process.p = cms.Path(process.mlphotons)
 
 process.flattener = cms.EDAnalyzer(
@@ -77,7 +72,6 @@ process.flattener = cms.EDAnalyzer(
         TriggerInputTag_HLT = cms.InputTag('TriggerResults', '', "HLT"),
         genpartInputTag = cms.InputTag('prunedGenParticles', '', 'PAT'),
         patjetInputTag = cms.InputTag('slimmedJets', '', 'PAT'),
-        pfcandInputTag = cms.InputTag('packedPFCandidates', '', 'PAT'),
         metInputTag = cms.InputTag('slimmedMETs', '', 'PAT'),
         muonInputTag = cms.InputTag('slimmedMuons', '', 'PAT'),
         electronInputTag = cms.InputTag('slimmedElectrons', '', 'PAT'),
@@ -88,6 +82,7 @@ process.flattener = cms.EDAnalyzer(
         ruclu_etaTag = cms.InputTag('mlphotons', 'RUCLUsEta', "mlphotons"),
         ruclu_phiTag = cms.InputTag('mlphotons', 'RUCLUsPhi', "mlphotons"),
         ruclu_energyTag = cms.InputTag('mlphotons', 'RUCLUsE', "mlphotons"),
+        ruclu_PFIsoTag = cms.InputTag('mlphotons', 'RUCLUsPFIso', "mlphotons"),
         ruclu_r1Tag = cms.InputTag('mlphotons', 'RUCLUsR1', "mlphotons"),
         ruclu_r2Tag = cms.InputTag('mlphotons', 'RUCLUsR2', "mlphotons"),
         ruclu_r3Tag = cms.InputTag('mlphotons', 'RUCLUsR3', "mlphotons"),
