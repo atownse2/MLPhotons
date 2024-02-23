@@ -66,13 +66,13 @@ process.configurationMetadata = cms.untracked.PSet(
 
 # ML photons
 process.mlphotons = cms.EDProducer("MLPhotonProducer",
+    collection_label = cms.string("mlphotons"),
     classifier_path = cms.string("RecoEgamma/EgammaMLPhotonProducers/data/classifier.onnx"),
     regressor_path = cms.string("RecoEgamma/EgammaMLPhotonProducers/data/regressor.onnx"),
     CluInputTag = cms.InputTag('reducedEgamma', 'reducedEBEEClusters', 'PAT'),
     HEEInputTag = cms.InputTag('reducedEgamma', 'reducedEERecHits', 'PAT'),
     HEBInputTag = cms.InputTag('reducedEgamma', 'reducedEBRecHits', 'PAT'),
     pfcandInputTag = cms.InputTag('packedPFCandidates', '', 'PAT'),
-    cluster_name = cms.string("mlphotons"),
     VtxInputTag = cms.InputTag('offlineSlimmedPrimaryVertices', '', 'PAT'),
     # PhoInputTag = cms.InputTag('slimmedPhotons', '', 'PAT'),
 )

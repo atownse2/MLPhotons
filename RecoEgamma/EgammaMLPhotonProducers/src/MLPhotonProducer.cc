@@ -41,9 +41,9 @@ MLPhotonProducer::MLPhotonProducer(const edm::ParameterSet& iConfig):
   vtxToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("VtxInputTag"))),
   ort_class(iConfig.getParameter<std::string>("classifier_path")),
   ort_regress(iConfig.getParameter<std::string>("regressor_path")),
-  MLPhotonCollection_(iConfig.getParameter<std::string>("cluster_name"))
+  collection_label(iConfig.getParameter<std::string>("collection_label"))
 {
-  produces<reco::MLPhotonCollection>(MLPhotonCollection_);
+  produces<reco::MLPhotonCollection>(collection_label);
 }
 
 MLPhotonProducer::~MLPhotonProducer(){}
@@ -186,7 +186,7 @@ void MLPhotonProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
     mlphotons->push_back(mlpho);
   }
 
-  iEvent.put(std::move(mlphotons), MLPhotonCollection_);
+  iEvent.put(std::move(mlphotons), collection_label);
 }
 
 bool MLPhotonProducer::comparator(const Cluster& C1, const Cluster& C2){

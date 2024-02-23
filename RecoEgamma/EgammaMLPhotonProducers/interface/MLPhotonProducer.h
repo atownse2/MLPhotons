@@ -66,6 +66,12 @@ class MLPhotonProducer : public edm::stream::EDProducer<> {
       std::vector<Cluster> DoPairings(std::vector<Cluster> inC, float R);
 
       // ----------member data ---------------------------
+      std::string collection_label;
+
+      // ML
+      cms::Ort::ONNXRuntime ort_class;
+      cms::Ort::ONNXRuntime ort_regress;
+
       const double MATCH_DR = 0.15; //Cluster Size
       edm::EDGetTokenT<std::vector<reco::CaloCluster>> token_clusters;
       edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >> token_HEE;
@@ -73,12 +79,6 @@ class MLPhotonProducer : public edm::stream::EDProducer<> {
 
       const edm::EDGetTokenT<std::vector<reco::Vertex>> vtxToken_;
 
-      //ML
-      cms::Ort::ONNXRuntime ort_class;
-      cms::Ort::ONNXRuntime ort_regress;
-
-      //Outputs
-      std::string MLPhotonCollection_;
 
   };
   #endif
