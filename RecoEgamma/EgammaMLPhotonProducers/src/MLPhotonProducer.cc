@@ -35,15 +35,16 @@
 #include "RecoEgamma/EgammaMLPhotonProducers/interface/MLPhotonProducer.h"
 
 MLPhotonProducer::MLPhotonProducer(const edm::ParameterSet& iConfig):
-  token_clusters(consumes<std::vector<reco::CaloCluster>>(iConfig.getParameter<edm::InputTag>("CluInputTag"))),
-  token_HEE(consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >>(iConfig.getParameter<edm::InputTag>("HEEInputTag"))),
-  token_HEB(consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >>(iConfig.getParameter<edm::InputTag>("HEBInputTag"))),
-  vtxToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("VtxInputTag"))),
-  ort_class(iConfig.getParameter<std::string>("classifier_path")),
-  ort_regress(iConfig.getParameter<std::string>("regressor_path")),
-  collection_label(iConfig.getParameter<std::string>("collection_label"))
+  collectionLabel(iConfig.getParameter<std::string>("collectionLabel")),
+  ortClassifier(iConfig.getParameter<std::string>("classifierPath")),
+  ortRegressor(iConfig.getParameter<std::string>("regressorPath")),
+  clustersToken(consumes<std::vector<reco::CaloCluster>>(iConfig.getParameter<edm::InputTag>("clusterInputTag"))),
+  HEEToken(consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >>(iConfig.getParameter<edm::InputTag>("HEEInputTag"))),
+  HEBToken(consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >>(iConfig.getParameter<edm::InputTag>("HEBInputTag"))),
+  vtxToken(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vtxInputTag"))),
+  pfCandToken(consumes<std::vector<pat::PackedCandidate>>(iConfig.getParameter<edm::InputTag>("pfCandInputTag")))
 {
-  produces<reco::MLPhotonCollection>(collection_label);
+  produces<reco::MLPhotonCollection>(collectionLabel);
 }
 
 MLPhotonProducer::~MLPhotonProducer(){}
@@ -51,9 +52,12 @@ MLPhotonProducer::~MLPhotonProducer(){}
 void MLPhotonProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   edm::Handle<std::vector<reco::CaloCluster>> CLS_pho;
-  iEvent.getByToken(token_clusters, CLS_pho);
+  iEvent.getByToken(clustersToken, CLS_pho);
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >> HEB;
-  iEvent.getByToken(token_HEB, HEB);
+  iEvent.getByToken(HEBToken, HEB);
+
+  edm::Handle<std::vector<pat::PackedCandidate>> pfCand;
+  iEvent.getByToken(pfCandToken, pfCand);
 
 ////////////////////////////////////////////////////////
   //BEGIN WITH CLUSTERING
@@ -108,7 +112,7 @@ void MLPhotonProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
   // Get the primary vertex
   edm::Handle<reco::VertexCollection> vtxs;
-  iEvent.getByToken(vtxToken_, vtxs);
+  iEvent.getByToken(vtxToken, vtxs);
   const reco::Vertex &pvtx = vtxs->front();
 
   //Setting up data types for onnx runtime
@@ -151,10 +155,10 @@ void MLPhotonProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
     regress_data_.emplace_back(eta_v);
 
     //Perform the Classification
-    class_outputs = ort_class.run(class_input_names, img, {}, class_output_names, 1)[0];
+    class_outputs = ortClassifier.run(class_input_names, img, {}, class_output_names, 1)[0];
 
     //Perform the Regression
-    regress_outputs = ort_regress.run(regress_input_names, regress_data_, {}, regress_output_names, 1)[0];
+    regress_outputs = ortRegressor.run(regress_input_names, regress_data_, {}, regress_output_names, 1)[0];
 
     //Compute softmax of Classifier output
     float denom = 0.0;
@@ -162,31 +166,42 @@ void MLPhotonProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
       denom += exp(class_outputs.at(ii));
     }
 
+    // Get LorentzVector
     float moe = regress_outputs.at(0); // mass/energy
     float energy = C.getTotalE();
     float eta = C.Eta();
     float phi = C.Phi();
 
-    // Get LorentzVector
     math::PtEtaPhiMLorentzVector p4 = calculateLorentzVector(moe, energy, eta, phi, pvtx.z());
 
     reco::MLPhoton mlpho(p4, pvtx.position());
 
-    mlpho.set_moe(moe);
+    // Calculate PF Isolation
+    float pfCandE = 0;
+    for (auto pfCand_iter = pfCand->begin(); pfCand_iter != pfCand->end(); ++pfCand_iter){
+      float dR = reco::deltaR(pfCand_iter->eta(), pfCand_iter->phi(), eta, phi);
+      if (dR < 0.3){
+        pfCandE += pfCand_iter->energy();
+      }
+    }
+    if (pfCandE < energy) pfCandE = energy;
+    mlpho.setPFIsolation(energy/pfCandE);
 
-    mlpho.set_diphoton_score(exp( class_outputs.at(0) ) / denom);
-    mlpho.set_monophoton_score(exp( class_outputs.at(1) ) / denom);
-    mlpho.set_hadron_score(exp( class_outputs.at(2) ) / denom);
+    mlpho.setMassEnergyRatio(moe);
 
-    mlpho.set_r1( C.compute_En( 1. ) /  C.compute_En( 0. ));
-    mlpho.set_r2( C.compute_En( 2. ) /  C.compute_En( 0. ));
-    mlpho.set_r3( C.compute_En( 3. ) /  C.compute_En( 0. ));
+    mlpho.setDiphotonScore(exp( class_outputs.at(0) ) / denom);
+    mlpho.setMonophotonScore(exp( class_outputs.at(1) ) / denom);
+    mlpho.setHadronScore(exp( class_outputs.at(2) ) / denom);
+
+    mlpho.setR1( C.compute_En( 1. ) /  C.compute_En( 0. ));
+    mlpho.setR2( C.compute_En( 2. ) /  C.compute_En( 0. ));
+    mlpho.setR3( C.compute_En( 3. ) /  C.compute_En( 0. ));
 
     // mlphotons->emplace_back(mlpho);
     mlphotons->push_back(mlpho);
   }
 
-  iEvent.put(std::move(mlphotons), collection_label);
+  iEvent.put(std::move(mlphotons), collectionLabel);
 }
 
 bool MLPhotonProducer::comparator(const Cluster& C1, const Cluster& C2){

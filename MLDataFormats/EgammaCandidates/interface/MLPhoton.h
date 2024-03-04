@@ -20,26 +20,30 @@ namespace reco {
 			~MLPhoton();
 
 			// Getter methods
-			float moe() const {return moe_;}
+			float massEnergyRatio() const {return moe_;}
 
-			float diphoton_score() const {return diphoton_score_;}
-			float monophoton_score() const {return monophoton_score_;}
-			float hadron_score() const {return hadron_score_;}
+			float diphotonScore() const {return diphoton_score_;}
+			float monophotonScore() const {return monophoton_score_;}
+			float hadronScore() const {return hadron_score_;}
+
+			float pfIsolation() const {return pfIso_;}
 
 			float r1() const {return r1_;}
 			float r2() const {return r2_;}
 			float r3() const {return r3_;}
 
 			// Setter methods
-			void set_moe(float moe) {moe_ = moe;}
+			void setMassEnergyRatio(float moe) {moe_ = moe;}
 
-			void set_diphoton_score(float score) {diphoton_score_ = score;}
-			void set_monophoton_score(float score) {monophoton_score_ = score;}
-			void set_hadron_score(float score) {hadron_score_ = score;}
+			void setDiphotonScore(float score) {diphoton_score_ = score;}
+			void setMonophotonScore(float score) {monophoton_score_ = score;}
+			void setHadronScore(float score) {hadron_score_ = score;}
 
-			void set_r1(float r1) {r1_ = r1;}
-			void set_r2(float r2) {r2_ = r2;}
-			void set_r3(float r3) {r3_ = r3;}
+			void setPFIsolation(float iso) {pfIso_ = iso;}
+
+			void setR1(float r1) {r1_ = r1;}
+			void setR2(float r2) {r2_ = r2;}
+			void setR3(float r3) {r3_ = r3;}
 
 
 		private:
@@ -56,6 +60,8 @@ namespace reco {
 			float diphoton_score_;
 			float monophoton_score_;
 			float hadron_score_;
+
+			float pfIso_;
 
 			float r1_;
 			float r2_;

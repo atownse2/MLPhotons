@@ -16,16 +16,17 @@
 #include "DataFormats/EcalRecHit/interface/EcalRecHit.h"
 
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
-#include "Geometry/Records/interface/CaloGeometryRecord.h"
 #include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
 // #include "Geometry/CaloGeometry/interface/CaloCellGeometry.h"
 
 #include "DataFormats/EcalDetId/interface/EBDetId.h"
-
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
+#include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 
 #include "DataFormats/Math/interface/LorentzVector.h"
+#include "DataFormats/Math/interface/deltaR.h"
 
 #include "MLDataFormats/EgammaCandidates/interface/MLPhoton.h"
 #include "MLDataFormats/EgammaCandidates/interface/MLPhotonFwd.h"
@@ -66,18 +67,19 @@ class MLPhotonProducer : public edm::stream::EDProducer<> {
       std::vector<Cluster> DoPairings(std::vector<Cluster> inC, float R);
 
       // ----------member data ---------------------------
-      std::string collection_label;
+      std::string collectionLabel;
 
       // ML
-      cms::Ort::ONNXRuntime ort_class;
-      cms::Ort::ONNXRuntime ort_regress;
+      cms::Ort::ONNXRuntime ortClassifier;
+      cms::Ort::ONNXRuntime ortRegressor;
 
       const double MATCH_DR = 0.15; //Cluster Size
-      edm::EDGetTokenT<std::vector<reco::CaloCluster>> token_clusters;
-      edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >> token_HEE;
-      edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >> token_HEB;
+      edm::EDGetTokenT<std::vector<reco::CaloCluster>> clustersToken;
+      edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >> HEEToken;
+      edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >> HEBToken;
 
-      const edm::EDGetTokenT<std::vector<reco::Vertex>> vtxToken_;
+      const edm::EDGetTokenT<std::vector<reco::Vertex>> vtxToken;
+      const edm::EDGetTokenT<std::vector<pat::PackedCandidate>> pfCandToken;
 
 
   };

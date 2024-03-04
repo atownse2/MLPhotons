@@ -2,18 +2,13 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: step1 --no_exec --mc --python_filename run_crab.py --fileout NanoAODv2.root --eventcontent NANOAODSIM --datatier NANOAODSIM --step NANO -n 6284 --conditions 106X_upgrade2018_realistic_v15_L1v1 --era Run2_2018,run2_nanoAOD_106Xv1
-import os
-
+# with command line options: NANO -s NANO --data --conditions 106X_dataRun2_v35 --era Run2_2018 --eventcontent NANOAOD --datatier NANOAOD --customise_commands=process.add_(cms.Service('InitRootHandlers', EnableIMT = cms.untracked.bool(False)));process.MessageLogger.cerr.FwkReport.reportEvery=1000 -n -1 --no_exec
 import FWCore.ParameterSet.Config as cms
-
-# from PhysicsTools.NanoAOD.simpleCandidateFlatTableProducer_cfi import simpleCandidateFlatTableProducer
-from PhysicsTools.NanoAOD.common_cff import Var, ExtVar, CandVars
+from FWCore.ParameterSet.VarParsing import VarParsing
 
 from Configuration.Eras.Era_Run2_2018_cff import Run2_2018
-from Configuration.Eras.Modifier_run2_nanoAOD_106Xv1_cff import run2_nanoAOD_106Xv1
 
-from FWCore.ParameterSet.VarParsing import VarParsing
+# Command line options
 options = VarParsing('analysis')
 options.register('year',
                  '2018',
@@ -27,17 +22,18 @@ inputFiles = options.inputFiles
 outputFile = options.outputFile
 maxEvents = options.maxEvents
 
+print('In MLNANOAODv9 maxEvents: {}'.format(maxEvents))
 
-process = cms.Process('NANO',Run2_2018,run2_nanoAOD_106Xv1)
+# Process
+process = cms.Process('MLNANO',Run2_2018)
 
 # import of standard configurations
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.load('Configuration.EventContent.EventContent_cff')
-process.load('SimGeneral.MixingModule.mixNoPU_cfi')
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
-process.load('Configuration.StandardSequences.MagneticField_cff')
+process.load('Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff')
 process.load('PhysicsTools.NanoAOD.nano_cff')
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
@@ -52,19 +48,16 @@ process.source = cms.Source("PoolSource",
     secondaryFileNames = cms.untracked.vstring()
 )
 
-process.options = cms.untracked.PSet(
-    SkipEvent = cms.untracked.vstring('ProductNotFound')
-)
+process.options = cms.untracked.PSet()
 
 # Production Info
 process.configurationMetadata = cms.untracked.PSet(
-    annotation = cms.untracked.string('step1 nevts:6284'),
+    annotation = cms.untracked.string('MLNANO nevts:{}'.format(maxEvents)),
     name = cms.untracked.string('Applications'),
     version = cms.untracked.string('$Revision: 1.19 $')
 )
 
-
-# ML photons
+# ML photons #TODO move this stuff to a cff file to reduce duplication
 process.mlphotons = cms.EDProducer("MLPhotonProducer",
     collectionLabel = cms.string("mlphotons"),
     classifierPath = cms.string("RecoEgamma/EgammaMLPhotonProducers/data/classifier.onnx"),
@@ -75,11 +68,10 @@ process.mlphotons = cms.EDProducer("MLPhotonProducer",
     pfcandInputTag = cms.InputTag('packedPFCandidates', '', 'PAT'),
     vtxInputTag = cms.InputTag('offlineSlimmedPrimaryVertices', '', 'PAT'),
     pfCandInputTag = cms.InputTag('packedPFCandidates', '', 'PAT')
-    # PhoInputTag = cms.InputTag('slimmedPhotons', '', 'PAT'),
 )
 
 # Define the mlphotonsTable module
-# from PhysicsTools.NanoAOD.simpleCandidateFlatTableProducer_cfi import simpleCandidateFlatTableProducer
+from PhysicsTools.NanoAOD.common_cff import Var
 process.mlphotonsTable = cms.EDProducer(
     'SimpleCandidateFlatTableProducer',
     src = cms.InputTag('mlphotons', 'mlphotons'),
@@ -102,46 +94,40 @@ process.mlphotonsTable = cms.EDProducer(
     ),
 )
 
-# process.dump = cms.EDAnalyzer('EventContentAnalyzer')
-
 # Output definition
-process.NANOAODSIMoutput = cms.OutputModule("NanoAODOutputModule",
+
+process.NANOAODoutput = cms.OutputModule("NanoAODOutputModule",
     compressionAlgorithm = cms.untracked.string('LZMA'),
     compressionLevel = cms.untracked.int32(9),
     dataset = cms.untracked.PSet(
-        dataTier = cms.untracked.string('NANOAODSIM'),
+        dataTier = cms.untracked.string('NANOAOD'),
         filterName = cms.untracked.string('')
     ),
     fileName = cms.untracked.string(outputFile),
-    outputCommands = process.NANOAODSIMEventContent.outputCommands
+    outputCommands = process.NANOAODEventContent.outputCommands
 )
-
-# process.NANOAODSIMoutput.outputCommands.extend([
-#     'keep *_MLPhotons_*_*',
-# ])
-
 
 # Additional output definition
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v15_L1v1', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '106X_dataRun2_v35', '')
 
 # Path and EndPath definitions
 process.mlphotons_step = cms.Path(process.mlphotons)
 process.mlphotonsTable_step = cms.Path(process.mlphotonsTable)
-# process.dump_step = cms.Path(process.dump)
-process.nanoAOD_step = cms.Path(process.nanoSequenceMC)
+process.nanoAOD_step = cms.Path(process.nanoSequence)
 process.endjob_step = cms.EndPath(process.endOfProcess)
-process.NANOAODSIMoutput_step = cms.EndPath(process.NANOAODSIMoutput)
+process.NANOAODoutput_step = cms.EndPath(process.NANOAODoutput)
 
 # Schedule definition
-process.schedule = cms.Schedule(process.mlphotons_step,
-                                # process.dump_step,
-                                process.mlphotonsTable_step,
-                                process.nanoAOD_step,
-                                process.endjob_step,
-                                process.NANOAODSIMoutput_step)
+process.schedule = cms.Schedule(
+    process.mlphotons_step,
+    process.mlphotonsTable_step,
+    process.nanoAOD_step,
+    process.endjob_step,
+    process.NANOAODoutput_step
+)
 
 from PhysicsTools.PatAlgos.tools.helpers import associatePatAlgosToolsTask
 associatePatAlgosToolsTask(process)
@@ -149,15 +135,16 @@ associatePatAlgosToolsTask(process)
 # customisation of the process.
 
 # Automatic addition of the customisation function from PhysicsTools.NanoAOD.nano_cff
-from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeMC 
+from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeData 
 
-#call to customisation function nanoAOD_customizeMC imported from PhysicsTools.NanoAOD.nano_cff
-process = nanoAOD_customizeMC(process)
+#call to customisation function nanoAOD_customizeData imported from PhysicsTools.NanoAOD.nano_cff
+process = nanoAOD_customizeData(process)
 
 # End of customisation functions
 
 # Customisation from command line
 
+process.add_(cms.Service('InitRootHandlers', EnableIMT = cms.untracked.bool(False)));process.MessageLogger.cerr.FwkReport.reportEvery=1000
 # Add early deletion of temporary data products to reduce peak memory need
 from Configuration.StandardSequences.earlyDeleteSettings_cff import customiseEarlyDelete
 process = customiseEarlyDelete(process)

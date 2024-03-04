@@ -1,7 +1,8 @@
 <lcgdict>
 
-  <class name="reco::MLPhoton" ClassVersion="-1">
+  <class name="reco::MLPhoton" ClassVersion="0">
    <version ClassVersion="-1" checksum="182824727"/>
+   <version ClassVersion="0" checksum="2791764607"/>
   </class>
 
   <class name="std::vector<reco::MLPhoton>"/>
