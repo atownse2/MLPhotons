@@ -10,7 +10,7 @@ To deploy:
 cmsrel CMSSW_10_6_19_patch2
 cd CMSSW_10_6_19_patch2/src
 cmsenv
-git clone https://github.com/atownse2/MLPhotons.git
+git clone https://github.com/atownse2/MLPhotons.git .
 git checkout nano-integration
 scram b
 ```
