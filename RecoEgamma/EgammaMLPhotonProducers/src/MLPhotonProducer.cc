@@ -189,8 +189,8 @@ void MLPhotonProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 
     mlpho.setMassEnergyRatio(moe);
 
-    mlpho.setDiphotonScore(exp( class_outputs.at(0) ) / denom);
-    mlpho.setMonophotonScore(exp( class_outputs.at(1) ) / denom);
+    mlpho.setMonophotonScore(exp( class_outputs.at(0) ) / denom);
+    mlpho.setDiphotonScore(exp( class_outputs.at(1) ) / denom);
     mlpho.setHadronScore(exp( class_outputs.at(2) ) / denom);
 
     mlpho.setR1( C.compute_En( 1. ) /  C.compute_En( 0. ));
@@ -268,8 +268,11 @@ math::PtEtaPhiMLorentzVector MLPhotonProducer::calculateLorentzVector(float moe,
 		etaprime *= -1.0;
 	}
 
-	float pt = energy * std::sin(std::atan(std::exp(-1 * etaprime)) * 2);
-	math::PtEtaPhiMLorentzVector p4(pt, eta, phi, moe * energy);
+  float m = moe*energy;
+  float p = std::sqrt(energy*energy - m*m);
+
+	float pt = p / std::cosh(etaprime);
+	math::PtEtaPhiMLorentzVector p4(pt, etaprime, phi, m);
 	return p4;
 }
 

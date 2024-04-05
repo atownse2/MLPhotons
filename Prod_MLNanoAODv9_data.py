@@ -71,7 +71,7 @@ process.mlphotons = cms.EDProducer("MLPhotonProducer",
 )
 
 # Define the mlphotonsTable module
-from PhysicsTools.NanoAOD.common_cff import Var
+from PhysicsTools.NanoAOD.common_cff import *
 process.mlphotonsTable = cms.EDProducer(
     'SimpleCandidateFlatTableProducer',
     src = cms.InputTag('mlphotons', 'mlphotons'),
@@ -79,10 +79,7 @@ process.mlphotonsTable = cms.EDProducer(
     doc = cms.string('Diphoton Objects and Tagging Variables'),
     singleton = cms.bool(False), # the number of entries is variable
     cut = cms.string(''),
-    variables = cms.PSet(
-        pt = Var("pt", float, precision=-1),
-        eta = Var("eta", float, precision=12),
-        phi = Var("phi", float, precision=12),
+    variables = cms.PSet(P4Vars,
         massEnergyRatio = Var("massEnergyRatio()", float, doc="Regressed mass/energy"),
         diphotonScore = Var("diphotonScore()", float, doc="Diphoton Classifier score"),
         monophotonScore = Var("monophotonScore()", float, doc="Single Photon Classifier score"),
