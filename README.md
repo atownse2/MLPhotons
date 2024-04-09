@@ -22,4 +22,5 @@ xrdcp root://ndcms.crc.nd.edu//store/mc/RunIISummer20UL18MiniAODv2/BkkToGRadionT
 
 Test run:
 ```bash
-./
+./run_signal_test.sh
+```
