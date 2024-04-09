@@ -2,7 +2,7 @@
 
 Runs over MiniAOD, creates clusters based on hits in ECal. Then applies classification NN to classify clusters as monophoton, diphoton, or hadronic, and then predicts the mass of the clusters.
 
-Also includes scripts for producing flat trees with some objects relevant to an EGamma analysis.
+Includes configs for NanoAODv9 production in UL2018.
 
 To deploy:
 
