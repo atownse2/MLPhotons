@@ -31,10 +31,12 @@ process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(maxEvents))
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring(*inputFiles))
 
 # ML photons
+import os
+CMSSW_BASE = os.environ['CMSSW_BASE']
 process.mlphotons = cms.EDProducer("MLPhotonProducer",
-    collection_label = cms.string("mlphotons"),
-    classifier_path = cms.string("RecoEgamma/EgammaMLPhotonProducers/data/classifier.onnx"),
-    regressor_path = cms.string("RecoEgamma/EgammaMLPhotonProducers/data/regressor.onnx"),
+    collectionLabel = cms.string("mlphotons"),
+    classifierPath = cms.string(CMSSW_BASE+"/src/RecoEgamma/EgammaMLPhotonProducers/data/classifier.onnx"), # This should be hardcoded?
+    regressorPath = cms.string(CMSSW_BASE+"/src/RecoEgamma/EgammaMLPhotonProducers/data/regressor.onnx"),
     CluInputTag = cms.InputTag('reducedEgamma', 'reducedEBEEClusters', 'PAT'),
     HEEInputTag = cms.InputTag('reducedEgamma', 'reducedEERecHits', 'PAT'),
     HEBInputTag = cms.InputTag('reducedEgamma', 'reducedEBRecHits', 'PAT'),
