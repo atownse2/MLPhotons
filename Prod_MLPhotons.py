@@ -37,12 +37,12 @@ process.mlphotons = cms.EDProducer("MLPhotonProducer",
     collectionLabel = cms.string("mlphotons"),
     classifierPath = cms.string(CMSSW_BASE+"/src/RecoEgamma/EgammaMLPhotonProducers/data/classifier.onnx"), # This should be hardcoded?
     regressorPath = cms.string(CMSSW_BASE+"/src/RecoEgamma/EgammaMLPhotonProducers/data/regressor.onnx"),
-    CluInputTag = cms.InputTag('reducedEgamma', 'reducedEBEEClusters', 'PAT'),
+    clusterInputTag = cms.InputTag('reducedEgamma', 'reducedEBEEClusters', 'PAT'),
     HEEInputTag = cms.InputTag('reducedEgamma', 'reducedEERecHits', 'PAT'),
     HEBInputTag = cms.InputTag('reducedEgamma', 'reducedEBRecHits', 'PAT'),
     pfcandInputTag = cms.InputTag('packedPFCandidates', '', 'PAT'),
-    VtxInputTag = cms.InputTag('offlineSlimmedPrimaryVertices', '', 'PAT'),
-    # PhoInputTag = cms.InputTag('slimmedPhotons', '', 'PAT'),
+    vtxInputTag = cms.InputTag('offlineSlimmedPrimaryVertices', '', 'PAT'),
+    pfCandInputTag = cms.InputTag('packedPFCandidates', '', 'PAT')
 )
 
 process.out = cms.OutputModule("PoolOutputModule",
