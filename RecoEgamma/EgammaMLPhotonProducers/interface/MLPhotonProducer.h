@@ -74,6 +74,7 @@ class MLPhotonProducer : public edm::stream::EDProducer<> {
       cms::Ort::ONNXRuntime ortRegressor;
 
       const double MATCH_DR = 0.15; //Cluster Size
+      const double ISO_DR = 0.3; //Isolation Cone Size
       edm::EDGetTokenT<std::vector<reco::CaloCluster>> clustersToken;
       edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >> HEEToken;
       edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >> HEBToken;

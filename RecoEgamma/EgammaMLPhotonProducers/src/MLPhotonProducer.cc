@@ -180,7 +180,7 @@ void MLPhotonProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
     float pfCandE = 0;
     for (auto pfCand_iter = pfCand->begin(); pfCand_iter != pfCand->end(); ++pfCand_iter){
       float dR = reco::deltaR(pfCand_iter->eta(), pfCand_iter->phi(), eta, phi);
-      if (dR < 0.3){
+      if (dR < ISO_DR){
         pfCandE += pfCand_iter->energy();
       }
     }
